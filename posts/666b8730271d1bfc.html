@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head><meta name="generator" content="Hexo 3.8.0">
+    <!--
+ * <head> 标签
+ -->
+<meta charset="utf-8">
+<title>JavaScript 实现继承的常用模式 - Ricky&#39;s Blog</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+<!-- Favicon -->
+
+    <link rel="icon" href="/images/I-Know-JS.png" type="image/x-icon">
+
+
+<link rel="stylesheet" href="/styles/lib/typo/typo.css">
+
+<!-- Highlight -->
+
+    <link rel="stylesheet" href="/styles/lib/highlight/atom-one-dark-reasonable.css">
+
+
+<!-- Custom Style -->
+<link rel="stylesheet" href="/styles/schemes/rb.css">
+<!-- <link rel="stylesheet" href="/styles/style.css"> -->
+
+<!-- JQuery -->
+<script src="/scripts/lib/jquery.slim.min.js"></script>
+
+</head>
+<body class="is-3-column has-navbar-fixed-top">
+
+    <!-- Navigation Bar -->
+    <!--
+ * 导航栏
+ -->
+<nav class="navbar navbar-main is-fixed-top">
+    <div class="container">
+        <!-- Nav Brand -->
+        <div class="navbar-brand is-flex-center">
+            <!-- Logo -->
+            <a class="navbar-item navbar-logo" href="/">
+                
+                    <img src="/images/I-Know-JS.png" alt="JavaScript 实现继承的常用模式">
+                
+            </a>
+            <!-- Nav Menu Button -->
+            <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false" data-target="site-menu">
+                <span aria-hidden="true"></span>
+                <span aria-hidden="true"></span>
+                <span aria-hidden="true"></span>
+            </a>
+        </div>
+        <!-- Nav Menu -->
+        <div class="navbar-menu" id="site-menu">
+            <div class="navbar-start">
+                <!-- Home -->
+                <a class="navbar-item " href="/">首页</a>
+                <!-- Archives -->
+                <a class="navbar-item " href="/archives">归档</a>
+                <!-- Categories -->
+                <a class="navbar-item " href="/categories">分类</a>
+                <!-- Tags -->
+                <a class="navbar-item " href="/tags">标签</a>
+                <!-- Other Menu Item -->
+                
+                    
+                
+            </div>
+        </div>
+        <div class="navbar-end"></div>
+    </div>
+</nav>
+
+    <!-- Content -->
+    <section class="main">
+        <div class="container">
+            <div class="columns">
+                <div class="column is-8-tablet is-8-desktop is-6-widescreen has-order-2">
+                    <!--
+ * 文章
+ * @param {Object} post
+ * @param {boolean} hasMore
+ -->
+<div class="card">
+    <!-- Thumbnail -->
+    
+    <div class="card-content article">
+        <!-- Post Infos -->
+        
+            <div class="level article-meta is-size-7 is-uppercase is-mobile is-overflow-x-auto">
+                <div class="level-left">
+                    <!-- Post Date -->
+                    <time class="level-item has-text-light" datetime="2019-04-11T08:00:00.000Z">3 个月前 ( 2019 04.11 )</time>
+                    <!-- Categories -->
+                    
+                        <div class="level-item is-size-7 is-uppercase">
+                            <a class="is-link-light is-link" href="/categories/Tech-Notes/">Tech Notes</a>
+                        </div>
+                    
+                    <!-- Read Time -->
+                    
+                        <span class="level-item has-text-light">
+                            大约 1125 字 ( 阅读时间：8 分钟 )
+                        </span>
+                    
+                </div>
+            </div>
+        
+        <!-- Article Title -->
+        <h1 class="title is-size-3 is-size-4-mobile has-text-weight-normal">
+            <a class="is-link-strong" href="/posts/666b8730271d1bfc.html">JavaScript 实现继承的常用模式</a>
+        </h1>
+        <!-- Tags -->
+        
+            <div class="level is-mobile">
+                <div class="level-left">
+                    
+                        <div class="level-item">
+                            <a class="button is-size-7 is-primary" href="/tags/JavaScript/">JavaScript</a>
+                        </div>
+                    
+                        <div class="level-item">
+                            <a class="button is-size-7 is-primary" href="/tags/Design-Pattern/">Design Pattern</a>
+                        </div>
+                    
+                </div>
+            </div>
+        
+        <!-- Article Content -->
+        <div class="content">
+            <h2 id="原型链"><a class="markdownIt-Anchor" href="#原型链"></a> 原型链</h2>
+<p>JavaScript 允许对象访问其原型链中的原型对象的属性，因此能够通过原型链实现继承。</p>
+<figure class="highlight javascript hljs"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">SuperType</span> (<span class="hljs-params"></span>) </span>&#123;</span><br><span class="line">  <span class="hljs-keyword">this</span>.superProperty = <span class="hljs-literal">true</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">SuperType.prototype.saySuperValue = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) </span>&#123;</span><br><span class="line">  <span class="hljs-built_in">console</span>.log(<span class="hljs-keyword">this</span>.superProperty)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">SubType</span> (<span class="hljs-params"></span>) </span>&#123;</span><br><span class="line">  <span class="hljs-keyword">this</span>.subProperty = <span class="hljs-literal">false</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">SubType.prototype = <span class="hljs-keyword">new</span> SuperType()</span><br><span class="line"></span><br><span class="line">SubType.prototype.saySubValue = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) </span>&#123;</span><br><span class="line">  <span class="hljs-built_in">console</span>.log(<span class="hljs-keyword">this</span>.subProperty)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>通过原型链实现继承的基本模式是让子类型的原型指向超类型的一个实例。</p>
+<a id="more"></a>
+<figure class="highlight javascript hljs"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="hljs-keyword">const</span> instance = <span class="hljs-keyword">new</span> SubType()</span><br><span class="line">instance.saySuperValue()   <span class="hljs-comment">// true</span></span><br></pre></td></tr></table></figure>
+<p>这种方式存在的问题在于：</p>
+<ul>
+<li>创建子类型实例时，无法给超类型的构造函数传递参数。</li>
+<li>子类型访问继承的引用类型值并进行一些操作时，可能会影响其他实例。</li>
+</ul>
+<figure class="highlight javascript hljs"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">Person</span> (<span class="hljs-params">name</span>) </span>&#123;</span><br><span class="line">  <span class="hljs-keyword">this</span>.name = name</span><br><span class="line">  <span class="hljs-keyword">this</span>.friends = []</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">Man</span> (<span class="hljs-params"></span>) </span>&#123;&#125;</span><br><span class="line"></span><br><span class="line">Man.prototype = <span class="hljs-keyword">new</span> Person()</span><br><span class="line"></span><br><span class="line"><span class="hljs-keyword">const</span> man1 = <span class="hljs-keyword">new</span> Man(<span class="hljs-string">'Ricky'</span>)</span><br><span class="line"><span class="hljs-keyword">const</span> man2 = <span class="hljs-keyword">new</span> Man()</span><br><span class="line"></span><br><span class="line"><span class="hljs-built_in">console</span>.log(man1.name)   <span class="hljs-comment">// undefined</span></span><br><span class="line"></span><br><span class="line">man1.friends.push(<span class="hljs-string">'Ricky'</span>)</span><br><span class="line"><span class="hljs-built_in">console</span>.log(man1.friends)    <span class="hljs-comment">// ['Ricky']</span></span><br><span class="line"><span class="hljs-built_in">console</span>.log(man2.friends)    <span class="hljs-comment">// ['Ricky']</span></span><br><span class="line"></span><br><span class="line">man1.friends = [<span class="hljs-string">'Mike'</span>]</span><br><span class="line"><span class="hljs-built_in">console</span>.log(man1.friends)    <span class="hljs-comment">// ['Mike']</span></span><br><span class="line"><span class="hljs-built_in">console</span>.log(man2.friends)    <span class="hljs-comment">// ['Ricky']</span></span><br></pre></td></tr></table></figure>
+<h2 id="借用构造函数"><a class="markdownIt-Anchor" href="#借用构造函数"></a> 借用构造函数</h2>
+<p>借用构造函数（constructor stealing，也叫作伪造对象或经典继承）的基本思想就是在子类型构造函数的内部调用超类型的构造函数。</p>
+<figure class="highlight javascript hljs"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">Person</span> (<span class="hljs-params">name</span>) </span>&#123;</span><br><span class="line">  <span class="hljs-keyword">this</span>.name = name</span><br><span class="line">  <span class="hljs-keyword">this</span>.friends = []</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">Man</span> (<span class="hljs-params">name</span>) </span>&#123;</span><br><span class="line">  Person.call(<span class="hljs-keyword">this</span>, name)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="hljs-keyword">const</span> man1 = <span class="hljs-keyword">new</span> Man(<span class="hljs-string">'Ricky'</span>)</span><br><span class="line"><span class="hljs-keyword">const</span> man2 = <span class="hljs-keyword">new</span> Man(<span class="hljs-string">'Mike'</span>)</span><br><span class="line"></span><br><span class="line"><span class="hljs-built_in">console</span>.log(man1.name)   <span class="hljs-comment">// Ricky</span></span><br><span class="line"><span class="hljs-built_in">console</span>.log(man2.name)   <span class="hljs-comment">// Mike</span></span><br><span class="line"></span><br><span class="line">man1.friends.push(<span class="hljs-string">'Mike'</span>)</span><br><span class="line"><span class="hljs-built_in">console</span>.log(man1.friends)    <span class="hljs-comment">// ['Mike']</span></span><br><span class="line"><span class="hljs-built_in">console</span>.log(man2.friends)    <span class="hljs-comment">// []</span></span><br></pre></td></tr></table></figure>
+<p>借用构造函数模式可以解决使用原型链实现继承时存在的问题。但是，如果仅仅使用借用构造函数的模式实现继承，会产生一定的局限性：</p>
+<ul>
+<li>方法都在构造函数中定义，会导致函数重复创建，无法复用。</li>
+<li>子类型的实例无法访问超类型的原型。</li>
+</ul>
+<figure class="highlight javascript hljs"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">Person</span> (<span class="hljs-params">name</span>) </span>&#123;</span><br><span class="line">  <span class="hljs-keyword">this</span>.name = name</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">Person.prototype.sayName = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) </span>&#123;</span><br><span class="line">  <span class="hljs-built_in">console</span>.log(<span class="hljs-keyword">this</span>.name)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">Man</span> (<span class="hljs-params">name</span>) </span>&#123;</span><br><span class="line">  Person.call(<span class="hljs-keyword">this</span>, name)</span><br><span class="line"></span><br><span class="line">  <span class="hljs-keyword">this</span>.sayGender = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) </span>&#123;</span><br><span class="line">    <span class="hljs-built_in">console</span>.log(<span class="hljs-string">'MALE'</span>)</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="hljs-keyword">const</span> man1 = <span class="hljs-keyword">new</span> Man(<span class="hljs-string">'Ricky'</span>)</span><br><span class="line"><span class="hljs-keyword">const</span> man2 = <span class="hljs-keyword">new</span> Man(<span class="hljs-string">'Mike'</span>)</span><br><span class="line"></span><br><span class="line">man1.sayGender()   <span class="hljs-comment">// MALE</span></span><br><span class="line">man2.sayGender()   <span class="hljs-comment">// MALE</span></span><br><span class="line"><span class="hljs-built_in">console</span>.log(man1.sayGender === man2.sayGender)   <span class="hljs-comment">// false</span></span><br><span class="line"></span><br><span class="line">man1.sayName()   <span class="hljs-comment">// TypeError: man1.sayName is not a function</span></span><br></pre></td></tr></table></figure>
+<h2 id="组合继承"><a class="markdownIt-Anchor" href="#组合继承"></a> 组合继承</h2>
+<p>组合继承（combination inheritance，也叫伪经典继承）是指将原型链与借用构造函数方法组合在一起的一种继承模式，弥补了这两种方法各自的缺陷。</p>
+<figure class="highlight javascript hljs"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">Person</span> (<span class="hljs-params">name</span>) </span>&#123;</span><br><span class="line">  <span class="hljs-keyword">this</span>.name = name</span><br><span class="line">  <span class="hljs-keyword">this</span>.friends = []</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">Person.prototype.sayName = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) </span>&#123;</span><br><span class="line">  <span class="hljs-built_in">console</span>.log(<span class="hljs-keyword">this</span>.name)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">Man</span> (<span class="hljs-params">name</span>) </span>&#123;</span><br><span class="line">  Person.call(<span class="hljs-keyword">this</span>, name)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">Man.prototype = <span class="hljs-keyword">new</span> Person(<span class="hljs-string">''</span>)</span><br><span class="line">Man.prototype.constructor = Man</span><br><span class="line">Man.prototype.sayGender = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) </span>&#123;</span><br><span class="line">  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">'MALE'</span>)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="hljs-keyword">const</span> man1 = <span class="hljs-keyword">new</span> Man(<span class="hljs-string">'Ricky'</span>)</span><br><span class="line"><span class="hljs-keyword">const</span> man2 = <span class="hljs-keyword">new</span> Man(<span class="hljs-string">'Mike'</span>)</span><br><span class="line"></span><br><span class="line">man1.sayGender()   <span class="hljs-comment">// MALE</span></span><br><span class="line">man2.sayGender()   <span class="hljs-comment">// MALE</span></span><br><span class="line"><span class="hljs-built_in">console</span>.log(man1.sayGender === man2.sayGender)   <span class="hljs-comment">// true</span></span><br><span class="line"></span><br><span class="line">man1.sayName()   <span class="hljs-comment">// Ricky</span></span><br><span class="line">man2.sayName()   <span class="hljs-comment">// Mike</span></span><br><span class="line"></span><br><span class="line">man1.friends.push(<span class="hljs-string">'Mike'</span>)</span><br><span class="line"><span class="hljs-built_in">console</span>.log(man1.friends)    <span class="hljs-comment">// ['Mike']</span></span><br><span class="line"><span class="hljs-built_in">console</span>.log(man2.friends)    <span class="hljs-comment">// []</span></span><br></pre></td></tr></table></figure>
+<h2 id="原型式继承"><a class="markdownIt-Anchor" href="#原型式继承"></a> 原型式继承</h2>
+<p>原型式（prototypal）继承的基本思想是借助原型，基于已有的对象创建新对象，同时避免了创建新的自定义类型。它的简单实现参考以下函数：</p>
+<figure class="highlight javascript hljs"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">prototypalInherit</span> (<span class="hljs-params">object</span>) </span>&#123;</span><br><span class="line">  <span class="hljs-keyword">const</span> F = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) </span>&#123;&#125;</span><br><span class="line">  F.prototype = object</span><br><span class="line">  <span class="hljs-keyword">return</span> <span class="hljs-keyword">new</span> F()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>如果我们将传入的参数 <code>object</code> 视为超类型的一个实例，<code>F</code> 视为子类型，那么实际上原型式继承可以视为原型链实现继承的简化和封装。</p>
+<p>ES 标准中通过 <code>Object.create()</code> 方法规范化了原型式继承。</p>
+<figure class="highlight javascript hljs"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="hljs-built_in">Object</span>.create(proto, [propertiesObject])</span><br></pre></td></tr></table></figure>
+<h2 id="寄生式继承"><a class="markdownIt-Anchor" href="#寄生式继承"></a> 寄生式继承</h2>
+<p>寄生式（parasitic）继承时原型式继承的延伸，实际上是对原型式继承的二次封装。</p>
+<figure class="highlight javascript hljs"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">parasiticInherit</span> (<span class="hljs-params">object</span>) </span>&#123;</span><br><span class="line">  <span class="hljs-keyword">const</span> newObject = prototypalInherit(object)</span><br><span class="line"></span><br><span class="line">  <span class="hljs-comment">// 对新对象进行扩展，为其添加属性和方法</span></span><br><span class="line"></span><br><span class="line">  <span class="hljs-keyword">return</span> newObject</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="寄生组合式继承"><a class="markdownIt-Anchor" href="#寄生组合式继承"></a> 寄生组合式继承</h2>
+<p>组合继承避免了原型链继承和借用构造函数的缺陷，但组合继承的实现中调用了两次超类型构造函数：一次是在创建子类型原型时，一次是在子类型构造函数内部。在第一次调用时子类型原型会包含超类型对象的全部实例属性，这些属性都是多余的，因为在第二次调用超类型构造函数时子类型的实例会屏蔽这些存在于子类型原型中的同名属性。</p>
+<p>可以通过原型式继承的思想避免在子类型原型上创建多余的属性。</p>
+<figure class="highlight javascript hljs"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">inheritPrototype</span> (<span class="hljs-params">SuperType, SubType</span>) </span>&#123;</span><br><span class="line">  <span class="hljs-keyword">const</span> prototype = prototypalInherit(SuperType.prototype)</span><br><span class="line">  prototype.constructor = SubType</span><br><span class="line">  SubType.prototype = prototype</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>上面的方法通过原型式继承创建了子类型的原型，并对原型进行了扩展，在这个过程中避免了调用超类型的构造函数。这种方法称为寄生组合式继承。</p>
+
+        </div>
+        <!-- Read More -->
+        
+    </div>
+</div>
+                </div>
+                <!--
+ * 侧边列
+ * @param {string} side - left or right
+ -->
+
+    <div class="column column-left is-4-tablet is-4-desktop is-3-widescreen is-hidden-mobile has-order-1">
+        
+            <!-- 
+ * 个人简介部件
+ -->
+<div class="card">
+    <div class="card-content">
+        <nav class="level">
+            <div class="level-item has-text-centered">
+                <div>
+                    <!-- Avatar -->
+                    <img class="image is-128x128" src="/images/I-Know-JS.png" alt="Ricky">
+                    <!-- Author -->
+                    <p class="is-size-4 is-block">
+                        Ricky
+                    </p>
+                    <!-- Author Description -->
+                    <p class="is-size-6 is-block">
+                        JavaScript Developer
+                    </p>
+                    <!-- E-mail -->
+                    <p class="is-size-8 is-block">
+                        
+                        <a href="mailto:rickkkkkkkkky@foxmail.com" title="rickkkkkkkkky@foxmail.com" class="is-link-light">rickkkkkkkkky@foxmail.com</a>
+                    </p>
+                </div>
+            </div>
+        </nav>
+        <nav class="level is-mobile">
+            <!-- Post Count -->
+            <div class="level-item has-text-centered is-marginless">
+                <div>
+                    <p class="heading">
+                        文章
+                    </p>
+                    <p class="title has-text-weight-normal">
+                        6
+                    </p>
+                </div>
+            </div>
+            <!-- Category Count -->
+            <div class="level-item has-text-centered is-marginless">
+                <div>
+                    <p class="heading">
+                        分类
+                    </p>
+                    <p class="title has-text-weight-normal">
+                        4
+                    </p>
+                </div>
+            </div>
+            <!-- Tag Count -->
+            <div class="level-item has-text-centered is-marginless">
+                <div>
+                    <p class="heading">
+                        标签
+                    </p>
+                    <p class="title has-text-weight-normal">
+                        6
+                    </p>
+                </div>
+            </div>
+        </nav>
+        <!-- Follow Link -->
+        <div class="level">
+            <a class="level-item button is-primary" href="https://github.com/Rickkkkkky" target="_blank">
+                关注
+            </a>
+        </div>
+    </div>
+</div>
+        
+            
+<div class="card">
+    <header class="card-header">
+        <h3 class="card-header-title">
+            归档
+        </h3>
+    </header>
+    <div class="card-content">
+        <div class="menu">
+            <ul class="menu-list">
+                
+                    
+                        <li>
+                            <a class="level is-marginless" href="/archives/2019/01">
+                                <span class="level-start">
+                                    <span class="level-item">
+                                        一月 - 2019
+                                    </span>
+                                </span>
+                                <span class="level-end">
+                                    <span class="level-item tag">
+                                        1
+                                    </span>
+                                </span>
+                            </a>
+                        </li>
+                    
+                        <li>
+                            <a class="level is-marginless" href="/archives/2019/03">
+                                <span class="level-start">
+                                    <span class="level-item">
+                                        三月 - 2019
+                                    </span>
+                                </span>
+                                <span class="level-end">
+                                    <span class="level-item tag">
+                                        2
+                                    </span>
+                                </span>
+                            </a>
+                        </li>
+                    
+                        <li>
+                            <a class="level is-marginless" href="/archives/2019/04">
+                                <span class="level-start">
+                                    <span class="level-item">
+                                        四月 - 2019
+                                    </span>
+                                </span>
+                                <span class="level-end">
+                                    <span class="level-item tag">
+                                        2
+                                    </span>
+                                </span>
+                            </a>
+                        </li>
+                    
+                        <li>
+                            <a class="level is-marginless" href="/archives/2019/06">
+                                <span class="level-start">
+                                    <span class="level-item">
+                                        六月 - 2019
+                                    </span>
+                                </span>
+                                <span class="level-end">
+                                    <span class="level-item tag">
+                                        1
+                                    </span>
+                                </span>
+                            </a>
+                        </li>
+                    
+                
+            </ul>
+        </div>
+    </div>
+    <div class="card-footer">
+        
+            <a class="button is-fullwidth is-primary" href="/archives">全部归档</a>
+        
+    </div>
+</div>
+        
+    </div>
+
+                <!--
+ * 侧边列
+ * @param {string} side - left or right
+ -->
+
+    <div class="column column-right is-4-tablet is-4-desktop is-3-widescreen is-hidden-touch is-hidden-desktop-only has-order-3">
+        
+            <div class="card">
+    <header class="card-header">
+        <h3 class="card-header-title">最近文章</h3>
+    </header>
+    <div class="card-content">
+        <!-- 
+ * @param {Object} posts
+ -->
+
+    <article class="media">
+       
+        <div class="media-content">
+            <div class="content">
+                <time class="has-text-light is-size-7 is-block" datetime="2019-06-20T08:00:00.000Z">2019-06-20</time>
+                <a class="is-link-strong is-size-6 is-single-line" href="/posts/977c1ee025c5154f.html">理解 JavaScript 中的 Promise</a>
+                <div class="level article-meta is-mobile">
+                    <div class="level-left">
+                        
+                            <div class="level-item is-size-7 is-uppercase">
+                                <a class="is-link-light is-link" href="/categories/Tech-Notes/">Tech Notes</a> / <a class="is-link-light is-link" href="/categories/Tech-Notes/JavaScript-Essence/">JavaScript Essence</a>
+                            </div>
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+    </article>
+
+    <article class="media">
+       
+        <div class="media-content">
+            <div class="content">
+                <time class="has-text-light is-size-7 is-block" datetime="2019-04-19T08:00:00.000Z">2019-04-19</time>
+                <a class="is-link-strong is-size-6 is-single-line" href="/posts/99bdc41f3fe568a2.html">理解 JavaScript 中的事件循环</a>
+                <div class="level article-meta is-mobile">
+                    <div class="level-left">
+                        
+                            <div class="level-item is-size-7 is-uppercase">
+                                <a class="is-link-light is-link" href="/categories/Tech-Notes/">Tech Notes</a> / <a class="is-link-light is-link" href="/categories/Tech-Notes/JavaScript-Essence/">JavaScript Essence</a>
+                            </div>
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+    </article>
+
+    <article class="media">
+       
+        <div class="media-content">
+            <div class="content">
+                <time class="has-text-light is-size-7 is-block" datetime="2019-04-11T08:00:00.000Z">2019-04-11</time>
+                <a class="is-link-strong is-size-6 is-single-line" href="/posts/666b8730271d1bfc.html">JavaScript 实现继承的常用模式</a>
+                <div class="level article-meta is-mobile">
+                    <div class="level-left">
+                        
+                            <div class="level-item is-size-7 is-uppercase">
+                                <a class="is-link-light is-link" href="/categories/Tech-Notes/">Tech Notes</a>
+                            </div>
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+    </article>
+
+    <article class="media">
+       
+        <div class="media-content">
+            <div class="content">
+                <time class="has-text-light is-size-7 is-block" datetime="2019-03-21T08:00:00.000Z">2019-03-21</time>
+                <a class="is-link-strong is-size-6 is-single-line" href="/posts/01da5b9cbaee6b5f.html">理解 JavaScript 中的原型对象</a>
+                <div class="level article-meta is-mobile">
+                    <div class="level-left">
+                        
+                            <div class="level-item is-size-7 is-uppercase">
+                                <a class="is-link-light is-link" href="/categories/Tech-Notes/">Tech Notes</a> / <a class="is-link-light is-link" href="/categories/Tech-Notes/JavaScript-Essence/">JavaScript Essence</a>
+                            </div>
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+    </article>
+
+    <article class="media">
+       
+        <div class="media-content">
+            <div class="content">
+                <time class="has-text-light is-size-7 is-block" datetime="2019-03-19T08:00:00.000Z">2019-03-19</time>
+                <a class="is-link-strong is-size-6 is-single-line" href="/posts/001aa9d7541f3ee9.html">JavaScript 实现函数防抖与函数节流</a>
+                <div class="level article-meta is-mobile">
+                    <div class="level-left">
+                        
+                            <div class="level-item is-size-7 is-uppercase">
+                                <a class="is-link-light is-link" href="/categories/Tech-Notes/">Tech Notes</a>
+                            </div>
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+    </article>
+
+    </div>
+</div>
+        
+            <div class="card">
+    <header class="card-header">
+        <h3 class="card-header-title">标签</h3>
+    </header>
+    <div class="card-content">
+        <div class="menu">
+            <ul class="menu-list">
+                <!-- 
+ * 标签列表
+ * @param {Object} list - a list of tags
+ -->
+
+    
+        <li>
+            <a class="level is-marginless" href="/tags/Interviews/">
+                <span class="level-start">
+                    <span class="level-item">Interviews</span>
+                </span>
+                <span class="level-end">
+                    <span class="level-item tag">0</span>
+                </span>
+            </a>
+        </li>
+    
+        <li>
+            <a class="level is-marginless" href="/tags/JavaScript/">
+                <span class="level-start">
+                    <span class="level-item">JavaScript</span>
+                </span>
+                <span class="level-end">
+                    <span class="level-item tag">6</span>
+                </span>
+            </a>
+        </li>
+    
+        <li>
+            <a class="level is-marginless" href="/tags/Design-Pattern/">
+                <span class="level-start">
+                    <span class="level-item">Design Pattern</span>
+                </span>
+                <span class="level-end">
+                    <span class="level-item tag">1</span>
+                </span>
+            </a>
+        </li>
+    
+        <li>
+            <a class="level is-marginless" href="/tags/WebGL/">
+                <span class="level-start">
+                    <span class="level-item">WebGL</span>
+                </span>
+                <span class="level-end">
+                    <span class="level-item tag">0</span>
+                </span>
+            </a>
+        </li>
+    
+        <li>
+            <a class="level is-marginless" href="/tags/React/">
+                <span class="level-start">
+                    <span class="level-item">React</span>
+                </span>
+                <span class="level-end">
+                    <span class="level-item tag">0</span>
+                </span>
+            </a>
+        </li>
+    
+
+            </ul>
+        </div>
+    </div>
+    <div class="card-footer">
+        
+            <a class="button is-fullwidth is-primary" href="/tags">更多标签</a>
+        
+    </div>
+</div>
+        
+            <div class="card">
+    <header class="card-header">
+        <h3 class="card-header-title">
+            分类
+        </h3>
+    </header>
+    <div class="card-content">
+        <div class="menu">
+            <ul class="menu-list">
+                <!-- 
+ * 分类列表
+ * @param {Object} list - a list of categories
+ -->
+
+    
+        <li>
+            <a class="level is-marginless" href="/categories/Tech-Notes/">
+                <span class="level-start">
+                    <span class="level-item">Tech Notes</span>
+                </span>
+                <span class="level-end">
+                    <span class="level-item tag">6</span>
+                </span>
+            </a>
+            
+        </li>
+    
+
+            </ul>
+        </div>
+    </div>
+    <div class="card-footer">
+        
+            <a class="button is-fullwidth is-primary" href="/categories">详细分类</a>
+        
+    </div>
+</div>
+        
+    </div>
+
+            </div>
+        </div>
+    <!-- Footer -->
+    <footer class="footer">
+    <div class="container">
+        <div class="level">
+            <div class="level-start has-text-centered-mobile">
+                <a class="footer-logo is-block" href="/">
+                    
+                        <img src="/images/I-Know-JS.png" alt="JavaScript 实现继承的常用模式" height="28">
+                    
+                </a>
+                <p class="is-size-7">&copy; 2019 Ricky&#39;s Blog Powered by <a href="http://hexo.io/" target="_blank">Hexo</a> & <a href="https://github.com/Rickkkkkky/hexo-theme-coriander">Coriander</a></p>
+            </div>
+        </div>
+    </div>
+</footer>
+    </section>
+
+
+    <script src="/scripts/main.js"></script>
+
+</body>
+</html>

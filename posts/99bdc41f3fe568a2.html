@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head><meta name="generator" content="Hexo 3.8.0">
+    <!--
+ * <head> 标签
+ -->
+<meta charset="utf-8">
+<title>理解 JavaScript 中的事件循环 - Ricky&#39;s Blog</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+<!-- Favicon -->
+
+    <link rel="icon" href="/images/I-Know-JS.png" type="image/x-icon">
+
+
+<link rel="stylesheet" href="/styles/lib/typo/typo.css">
+
+<!-- Highlight -->
+
+    <link rel="stylesheet" href="/styles/lib/highlight/atom-one-dark-reasonable.css">
+
+
+<!-- Custom Style -->
+<link rel="stylesheet" href="/styles/schemes/rb.css">
+<!-- <link rel="stylesheet" href="/styles/style.css"> -->
+
+<!-- JQuery -->
+<script src="/scripts/lib/jquery.slim.min.js"></script>
+
+</head>
+<body class="is-3-column has-navbar-fixed-top">
+
+    <!-- Navigation Bar -->
+    <!--
+ * 导航栏
+ -->
+<nav class="navbar navbar-main is-fixed-top">
+    <div class="container">
+        <!-- Nav Brand -->
+        <div class="navbar-brand is-flex-center">
+            <!-- Logo -->
+            <a class="navbar-item navbar-logo" href="/">
+                
+                    <img src="/images/I-Know-JS.png" alt="理解 JavaScript 中的事件循环">
+                
+            </a>
+            <!-- Nav Menu Button -->
+            <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false" data-target="site-menu">
+                <span aria-hidden="true"></span>
+                <span aria-hidden="true"></span>
+                <span aria-hidden="true"></span>
+            </a>
+        </div>
+        <!-- Nav Menu -->
+        <div class="navbar-menu" id="site-menu">
+            <div class="navbar-start">
+                <!-- Home -->
+                <a class="navbar-item " href="/">首页</a>
+                <!-- Archives -->
+                <a class="navbar-item " href="/archives">归档</a>
+                <!-- Categories -->
+                <a class="navbar-item " href="/categories">分类</a>
+                <!-- Tags -->
+                <a class="navbar-item " href="/tags">标签</a>
+                <!-- Other Menu Item -->
+                
+                    
+                
+            </div>
+        </div>
+        <div class="navbar-end"></div>
+    </div>
+</nav>
+
+    <!-- Content -->
+    <section class="main">
+        <div class="container">
+            <div class="columns">
+                <div class="column is-8-tablet is-8-desktop is-6-widescreen has-order-2">
+                    <!--
+ * 文章
+ * @param {Object} post
+ * @param {boolean} hasMore
+ -->
+<div class="card">
+    <!-- Thumbnail -->
+    
+    <div class="card-content article">
+        <!-- Post Infos -->
+        
+            <div class="level article-meta is-size-7 is-uppercase is-mobile is-overflow-x-auto">
+                <div class="level-left">
+                    <!-- Post Date -->
+                    <time class="level-item has-text-light" datetime="2019-04-19T08:00:00.000Z">3 个月前 ( 2019 04.19 )</time>
+                    <!-- Categories -->
+                    
+                        <div class="level-item is-size-7 is-uppercase">
+                            <a class="is-link-light is-link" href="/categories/Tech-Notes/">Tech Notes</a> / <a class="is-link-light is-link" href="/categories/Tech-Notes/JavaScript-Essence/">JavaScript Essence</a>
+                        </div>
+                    
+                    <!-- Read Time -->
+                    
+                        <span class="level-item has-text-light">
+                            大约 2055 字 ( 阅读时间：14 分钟 )
+                        </span>
+                    
+                </div>
+            </div>
+        
+        <!-- Article Title -->
+        <h1 class="title is-size-3 is-size-4-mobile has-text-weight-normal">
+            <a class="is-link-strong" href="/posts/99bdc41f3fe568a2.html">理解 JavaScript 中的事件循环</a>
+        </h1>
+        <!-- Tags -->
+        
+            <div class="level is-mobile">
+                <div class="level-left">
+                    
+                        <div class="level-item">
+                            <a class="button is-size-7 is-primary" href="/tags/JavaScript/">JavaScript</a>
+                        </div>
+                    
+                </div>
+            </div>
+        
+        <!-- Article Content -->
+        <div class="content">
+            <h2 id="主线程与工作线程"><a class="markdownIt-Anchor" href="#主线程与工作线程"></a> 主线程与工作线程</h2>
+<p>JavaScript 的一个核心特征就是单线程。当我们说 &quot;JavaScript 是单线程语言&quot; 时，我们实际上想表达的意思是 &quot;JavaScript 引擎中负责解释和执行 JavaScript 代码的线程只有一个&quot;。我们将这个线程称为主线程。</p>
+<p>由于 JavaScript 是单线程的，主线程在同一时刻只能执行一个任务。对于一些耗时较长的任务（如 I/O 操作），如果将其放在主线程中运行，势必会造成主线程阻塞。因此这些较为耗时的操作不能放在主线程上执行，需要其他线程帮助主线程处理这些任务，例如处理 Ajax 请求的线程、定时器线程、处理 DOM 事件的线程、（Node.js中）文件读写的线程等。我们将这些线程统一称为工作线程。</p>
+<a id="more"></a>
+<h2 id="异步过程"><a class="markdownIt-Anchor" href="#异步过程"></a> 异步过程</h2>
+<p>异步的意义在于：工作线程执行任务时，主线程同时也可以继续执行其他任务。</p>
+<p>我们可以将异步过程大致归纳为：</p>
+<ol>
+<li>主线程发起异步任务请求；</li>
+<li>相应的工作线程接收异步任务请求，并通知主线程；</li>
+<li>工作线程执行相应的任务，同时主线程继续执行其他任务；</li>
+<li>工作线程完成任务后通知主线程；</li>
+<li>主线程执行异步任务的回调。</li>
+</ol>
+<p>举个例子：</p>
+<figure class="highlight javascript hljs"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="hljs-built_in">console</span>.log(<span class="hljs-string">'script start'</span>)</span><br><span class="line"></span><br><span class="line">setTimeout(<span class="hljs-function"><span class="hljs-params">()</span> =&gt;</span> &#123;</span><br><span class="line">  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">'timeout'</span>)</span><br><span class="line">&#125;, <span class="hljs-number">1000</span>)</span><br><span class="line"></span><br><span class="line"><span class="hljs-built_in">console</span>.log(<span class="hljs-string">'script end'</span>)</span><br></pre></td></tr></table></figure>
+<p>上面这段代码在控制台的输出为：</p>
+<figure class="highlight plaintext hljs"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">script start</span><br><span class="line">script end</span><br><span class="line">timeout</span><br></pre></td></tr></table></figure>
+<p>控制台首先输出了 <code>script start</code> 和 <code>script end</code>，之后经过了大概 1 秒的时间后输出了 <code>timeout</code>。</p>
+<p>当主线程调用 <code>setTimeout()</code> 时，会向定时器的工作线程发送异步任务请求，而后继续执行之后的任务。因此控制台中 <code>script end</code> 会在 <code>timeout</code> 之前被输出。</p>
+<p>再举个例子：</p>
+<figure class="highlight javascript hljs"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="hljs-built_in">console</span>.log(<span class="hljs-string">'script start'</span>)</span><br><span class="line"></span><br><span class="line">setTimeout(<span class="hljs-function"><span class="hljs-params">()</span> =&gt;</span> &#123;</span><br><span class="line">  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">'timeout'</span>)</span><br><span class="line">&#125;, <span class="hljs-number">1000</span>)</span><br><span class="line"></span><br><span class="line"><span class="hljs-keyword">const</span> startTime = <span class="hljs-keyword">new</span> <span class="hljs-built_in">Date</span>().getTime()</span><br><span class="line"><span class="hljs-keyword">while</span> (<span class="hljs-keyword">new</span> <span class="hljs-built_in">Date</span>().getTime() - startTime &lt;= <span class="hljs-number">10000</span>) &#123;&#125;</span><br><span class="line"></span><br><span class="line"><span class="hljs-built_in">console</span>.log(<span class="hljs-string">'script end'</span>)</span><br></pre></td></tr></table></figure>
+<p>这个例子与之前的例子很相似。不同之处在于，调用 <code>setTimeout()</code> 并设置一个延迟 1 秒执行的异步任务之后，我们通过一个 <code>while</code> 循环判断时间是否经过了 10 秒。观察控制台的输出:</p>
+<figure class="highlight plaintext hljs"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">script start</span><br><span class="line">script end</span><br><span class="line">timeout</span><br></pre></td></tr></table></figure>
+<p>控制台首先输出了 <code>script start</code>，之后经过了大概 10 秒的时间后输出了 <code>script end</code> 和 <code>timeout</code>。</p>
+<p>这个结果有趣的点在于，虽然 <code>setTimeout()</code> 设置的延迟时间只有 1 秒，但实际上它的回调函数执行的时间却延迟了大约 10 秒。所以问题的关键点在于，异步过程中工作线程与主线程是通过怎么样的机制进行沟通的？</p>
+<h2 id="调用栈-任务队列与事件循环"><a class="markdownIt-Anchor" href="#调用栈-任务队列与事件循环"></a> 调用栈、任务队列与事件循环</h2>
+<p>JavaScript 运行时维护了一个调用栈（Call Stack）与任务队列（Task Queue）。</p>
+<p>调用栈是 JavaScript 追踪函数执行流的一种机制。</p>
+<ul>
+<li>每调用一个函数，解释器就会把该函数添加进调用栈并开始执行。</li>
+<li>如果正在调用栈中执行的函数还调用了其他函数，那么新函数也将会被添加进调用栈，并开始执行。</li>
+<li>当前函数执行完毕后，会将该函数从调用栈中移除，并继续执行当前执行环境中剩下的代码。</li>
+</ul>
+<p>任务队列则是工作线程在异步任务完成之后通知主线程的通知机制。当工作线程完成异步任务后，相应的任务会被添加到任务队列中。</p>
+<p>主线程执行任务队列中的任务是一个循环的过程，称为事件循环。当调用栈为空时，任务队列中最先进入队列的任务会被移出队列，并传递给主线程，回调函数进入调用栈开始执行。</p>
+<p><a href="https://raw.githubusercontent.com/Rickkkkkky/blog-gallery/master/event-loop.png" target="_blank" rel="noopener"><img src="https://raw.githubusercontent.com/Rickkkkkky/blog-gallery/master/event-loop.png" alt="event-loop.png"></a></p>
+<h2 id="gui-渲染线程"><a class="markdownIt-Anchor" href="#gui-渲染线程"></a> GUI 渲染线程</h2>
+<p>浏览器内核中包含了一个 GUI 渲染线程，它负责渲染图形用户界面。</p>
+<p>值得注意的是，浏览器的 GUI 渲染线程与执行 JavaScript 代码的主线程是互斥的，当主线程执行 JavaScript 时 GUI 线程会被挂起，GUI 更新会被保存在一个队列中。GUI 渲染线程会在 JavaScript 主线程的事件循环的间隔中执行 GUI 的更新。</p>
+<p>举个例子：</p>
+<figure class="highlight javascript hljs"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="hljs-built_in">document</span>.body.style[<span class="hljs-string">'background-color'</span>] = <span class="hljs-string">'#000'</span></span><br><span class="line"></span><br><span class="line"><span class="hljs-keyword">const</span> startTime = <span class="hljs-keyword">new</span> <span class="hljs-built_in">Date</span>().getTime()</span><br><span class="line"><span class="hljs-keyword">while</span> (<span class="hljs-keyword">new</span> <span class="hljs-built_in">Date</span>().getTime() - startTime &lt;= <span class="hljs-number">10000</span>) &#123;&#125;</span><br><span class="line"></span><br><span class="line"><span class="hljs-built_in">document</span>.body.style[<span class="hljs-string">'background-color'</span>] = <span class="hljs-string">'#fff'</span></span><br></pre></td></tr></table></figure>
+<p>在浏览器中运行上面的例子，我们会发现页面的背景色并没有像我们预期的一样首先变为黑色，经过 10 秒后再变为白色。产生这样的结果的原因在于，两次修改页面背景色的操作实际上是在一次事件循环中执行的，这个过程中 GUI 渲染线程并不会立即执行 GUI 的更新。</p>
+<p>修改上面的例子：</p>
+<figure class="highlight javascript hljs"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="hljs-built_in">document</span>.body.style[<span class="hljs-string">'background-color'</span>] = <span class="hljs-string">'#000'</span></span><br><span class="line"></span><br><span class="line">setTimeout(<span class="hljs-function"><span class="hljs-params">()</span> =&gt;</span> &#123;</span><br><span class="line">  <span class="hljs-built_in">document</span>.body.style[<span class="hljs-string">'background-color'</span>] = <span class="hljs-string">'#fff'</span></span><br><span class="line">&#125;, <span class="hljs-number">10000</span>)</span><br></pre></td></tr></table></figure>
+<p>这个例子中，我们将两次修改页面背景色的操作放在两次事件循环中执行，页面的背景色首先变为黑色，在经过大约 10 秒之后变为了白色。当修改页面背景色为黑色并且当前调用栈执行完毕后，GUI 渲染线程执行 GUI 更新。定时器线程在 10 秒的延迟后向任务队列推送任务。主线程获取到任务以后开始新一轮的事件循环，将页面的背景色设为白色，而后本轮事件循环结束，GUI 渲染线程再次执行 GUI 更新。</p>
+<h2 id="web-worker"><a class="markdownIt-Anchor" href="#web-worker"></a> Web Worker</h2>
+<p>由于 JavaScript 单线程的机制，当调用栈中执行的代码需要消耗较长的时间时，任务队列中的任务就必须等待，直到这些较为耗时的操作执行完毕后才能被处理；并且，GUI 渲染也会被阻塞，GUI 会长时间得不到更新。</p>
+<p>为了解决上面提出的问题，浏览器提供了 Web Worker API，可以将较为耗时的操作分配到其他线程中。当创建一个 Worker 实例时，JavaScript 引擎就会向浏览器申请一个子线程，我们将其称为 Web Worker 线程。Web Worker 线程具有独立的运行时，主线程与 Web Worker 线程之间通过 <code>postMessage()</code> 向对方推送消息。</p>
+<p><a href="https://raw.githubusercontent.com/Rickkkkkky/blog-gallery/master/web-worker-event-loop.png" target="_blank" rel="noopener"><img src="https://raw.githubusercontent.com/Rickkkkkky/blog-gallery/master/web-worker-event-loop.png" alt="web-worker-event-loop"></a></p>
+<h2 id="微任务"><a class="markdownIt-Anchor" href="#微任务"></a> 微任务</h2>
+<p>举个例子：</p>
+<figure class="highlight javascript hljs"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="hljs-built_in">console</span>.log(<span class="hljs-string">'script start'</span>)</span><br><span class="line"></span><br><span class="line">setTimeout(<span class="hljs-function"><span class="hljs-params">()</span> =&gt;</span> &#123;</span><br><span class="line">  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">'timeout'</span>)</span><br><span class="line">&#125;, <span class="hljs-number">100</span>)</span><br><span class="line"></span><br><span class="line"><span class="hljs-keyword">const</span> startTime = <span class="hljs-keyword">new</span> <span class="hljs-built_in">Date</span>().getTime()</span><br><span class="line"><span class="hljs-keyword">while</span> (<span class="hljs-keyword">new</span> <span class="hljs-built_in">Date</span>().getTime() - startTime &lt;= <span class="hljs-number">10000</span>) &#123;&#125;</span><br><span class="line"></span><br><span class="line"><span class="hljs-built_in">Promise</span>.resolve().then(<span class="hljs-function"><span class="hljs-params">()</span> =&gt;</span> &#123;</span><br><span class="line">  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">'first promise'</span>)</span><br><span class="line">&#125;).then(<span class="hljs-function"><span class="hljs-params">()</span> =&gt;</span> &#123;</span><br><span class="line">  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">'second promise'</span>)</span><br><span class="line">&#125;)</span><br><span class="line"></span><br><span class="line"><span class="hljs-built_in">console</span>.log(<span class="hljs-string">'script end'</span>)</span><br></pre></td></tr></table></figure>
+<p>上面的例子中，正确的输出顺序是：</p>
+<figure class="highlight plaintext hljs"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">script start</span><br><span class="line">script end</span><br><span class="line">first promise</span><br><span class="line">second promise</span><br><span class="line">timeout</span><br></pre></td></tr></table></figure>
+<p>为什么 <code>timeout</code> 会在最后被输出呢？</p>
+<p>事实上，在 JavaScript 的运行机制中，除了任务队列以外，还存在一个微任务（microtask）队列。微任务队列与任务队列的不同之处在于，在调用栈为空时，主线程会优先从微任务队列中获取待执行的任务，只有当调用栈和微任务队列都为空时，主线程才会执行任务队列中的任务。</p>
+<p><a href="https://raw.githubusercontent.com/Rickkkkkky/blog-gallery/master/microtask-event-loop.png" target="_blank" rel="noopener"><img src="https://raw.githubusercontent.com/Rickkkkkky/blog-gallery/master/microtask-event-loop.png" alt="microtask-event-loop"></a></p>
+<p>微任务产生的途径包括：</p>
+<ul>
+<li><code>Promise</code></li>
+<li><code>MutationObserver</code></li>
+<li><code>Object.observe</code>（已废弃）</li>
+<li><code>process.nextTick()</code>（Node.js API）</li>
+</ul>
+<p>当某次事件循环中产生了微任务，微任务会被添加到微任务队列中。当调用栈为空时，微任务队列中的微任务按顺序被执行。当调用栈和微任务队列都为空时，本次事件循环结束，GUI 渲染线程渲染用户图形界面，而后开始下一轮事件循环。</p>
+<hr>
+<blockquote>
+<h4 id="参考内容"><a class="markdownIt-Anchor" href="#参考内容"></a> 参考内容</h4>
+<ol>
+<li><a href="https://jakearchibald.com/2015/tasks-microtasks-queues-and-schedules/" target="_blank" rel="noopener">Tasks, microtasks, queues and schedules</a></li>
+<li><a href="https://blog.carbonfive.com/2013/10/27/the-javascript-event-loop-explained/" target="_blank" rel="noopener">The JavaScript Event Loop: Explained</a></li>
+</ol>
+</blockquote>
+
+        </div>
+        <!-- Read More -->
+        
+    </div>
+</div>
+                </div>
+                <!--
+ * 侧边列
+ * @param {string} side - left or right
+ -->
+
+    <div class="column column-left is-4-tablet is-4-desktop is-3-widescreen is-hidden-mobile has-order-1">
+        
+            <!-- 
+ * 个人简介部件
+ -->
+<div class="card">
+    <div class="card-content">
+        <nav class="level">
+            <div class="level-item has-text-centered">
+                <div>
+                    <!-- Avatar -->
+                    <img class="image is-128x128" src="/images/I-Know-JS.png" alt="Ricky">
+                    <!-- Author -->
+                    <p class="is-size-4 is-block">
+                        Ricky
+                    </p>
+                    <!-- Author Description -->
+                    <p class="is-size-6 is-block">
+                        JavaScript Developer
+                    </p>
+                    <!-- E-mail -->
+                    <p class="is-size-8 is-block">
+                        
+                        <a href="mailto:rickkkkkkkkky@foxmail.com" title="rickkkkkkkkky@foxmail.com" class="is-link-light">rickkkkkkkkky@foxmail.com</a>
+                    </p>
+                </div>
+            </div>
+        </nav>
+        <nav class="level is-mobile">
+            <!-- Post Count -->
+            <div class="level-item has-text-centered is-marginless">
+                <div>
+                    <p class="heading">
+                        文章
+                    </p>
+                    <p class="title has-text-weight-normal">
+                        6
+                    </p>
+                </div>
+            </div>
+            <!-- Category Count -->
+            <div class="level-item has-text-centered is-marginless">
+                <div>
+                    <p class="heading">
+                        分类
+                    </p>
+                    <p class="title has-text-weight-normal">
+                        4
+                    </p>
+                </div>
+            </div>
+            <!-- Tag Count -->
+            <div class="level-item has-text-centered is-marginless">
+                <div>
+                    <p class="heading">
+                        标签
+                    </p>
+                    <p class="title has-text-weight-normal">
+                        6
+                    </p>
+                </div>
+            </div>
+        </nav>
+        <!-- Follow Link -->
+        <div class="level">
+            <a class="level-item button is-primary" href="https://github.com/Rickkkkkky" target="_blank">
+                关注
+            </a>
+        </div>
+    </div>
+</div>
+        
+            
+<div class="card">
+    <header class="card-header">
+        <h3 class="card-header-title">
+            归档
+        </h3>
+    </header>
+    <div class="card-content">
+        <div class="menu">
+            <ul class="menu-list">
+                
+                    
+                        <li>
+                            <a class="level is-marginless" href="/archives/2019/01">
+                                <span class="level-start">
+                                    <span class="level-item">
+                                        一月 - 2019
+                                    </span>
+                                </span>
+                                <span class="level-end">
+                                    <span class="level-item tag">
+                                        1
+                                    </span>
+                                </span>
+                            </a>
+                        </li>
+                    
+                        <li>
+                            <a class="level is-marginless" href="/archives/2019/03">
+                                <span class="level-start">
+                                    <span class="level-item">
+                                        三月 - 2019
+                                    </span>
+                                </span>
+                                <span class="level-end">
+                                    <span class="level-item tag">
+                                        2
+                                    </span>
+                                </span>
+                            </a>
+                        </li>
+                    
+                        <li>
+                            <a class="level is-marginless" href="/archives/2019/04">
+                                <span class="level-start">
+                                    <span class="level-item">
+                                        四月 - 2019
+                                    </span>
+                                </span>
+                                <span class="level-end">
+                                    <span class="level-item tag">
+                                        2
+                                    </span>
+                                </span>
+                            </a>
+                        </li>
+                    
+                        <li>
+                            <a class="level is-marginless" href="/archives/2019/06">
+                                <span class="level-start">
+                                    <span class="level-item">
+                                        六月 - 2019
+                                    </span>
+                                </span>
+                                <span class="level-end">
+                                    <span class="level-item tag">
+                                        1
+                                    </span>
+                                </span>
+                            </a>
+                        </li>
+                    
+                
+            </ul>
+        </div>
+    </div>
+    <div class="card-footer">
+        
+            <a class="button is-fullwidth is-primary" href="/archives">全部归档</a>
+        
+    </div>
+</div>
+        
+    </div>
+
+                <!--
+ * 侧边列
+ * @param {string} side - left or right
+ -->
+
+    <div class="column column-right is-4-tablet is-4-desktop is-3-widescreen is-hidden-touch is-hidden-desktop-only has-order-3">
+        
+            <div class="card">
+    <header class="card-header">
+        <h3 class="card-header-title">最近文章</h3>
+    </header>
+    <div class="card-content">
+        <!-- 
+ * @param {Object} posts
+ -->
+
+    <article class="media">
+       
+        <div class="media-content">
+            <div class="content">
+                <time class="has-text-light is-size-7 is-block" datetime="2019-06-20T08:00:00.000Z">2019-06-20</time>
+                <a class="is-link-strong is-size-6 is-single-line" href="/posts/977c1ee025c5154f.html">理解 JavaScript 中的 Promise</a>
+                <div class="level article-meta is-mobile">
+                    <div class="level-left">
+                        
+                            <div class="level-item is-size-7 is-uppercase">
+                                <a class="is-link-light is-link" href="/categories/Tech-Notes/">Tech Notes</a> / <a class="is-link-light is-link" href="/categories/Tech-Notes/JavaScript-Essence/">JavaScript Essence</a>
+                            </div>
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+    </article>
+
+    <article class="media">
+       
+        <div class="media-content">
+            <div class="content">
+                <time class="has-text-light is-size-7 is-block" datetime="2019-04-19T08:00:00.000Z">2019-04-19</time>
+                <a class="is-link-strong is-size-6 is-single-line" href="/posts/99bdc41f3fe568a2.html">理解 JavaScript 中的事件循环</a>
+                <div class="level article-meta is-mobile">
+                    <div class="level-left">
+                        
+                            <div class="level-item is-size-7 is-uppercase">
+                                <a class="is-link-light is-link" href="/categories/Tech-Notes/">Tech Notes</a> / <a class="is-link-light is-link" href="/categories/Tech-Notes/JavaScript-Essence/">JavaScript Essence</a>
+                            </div>
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+    </article>
+
+    <article class="media">
+       
+        <div class="media-content">
+            <div class="content">
+                <time class="has-text-light is-size-7 is-block" datetime="2019-04-11T08:00:00.000Z">2019-04-11</time>
+                <a class="is-link-strong is-size-6 is-single-line" href="/posts/666b8730271d1bfc.html">JavaScript 实现继承的常用模式</a>
+                <div class="level article-meta is-mobile">
+                    <div class="level-left">
+                        
+                            <div class="level-item is-size-7 is-uppercase">
+                                <a class="is-link-light is-link" href="/categories/Tech-Notes/">Tech Notes</a>
+                            </div>
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+    </article>
+
+    <article class="media">
+       
+        <div class="media-content">
+            <div class="content">
+                <time class="has-text-light is-size-7 is-block" datetime="2019-03-21T08:00:00.000Z">2019-03-21</time>
+                <a class="is-link-strong is-size-6 is-single-line" href="/posts/01da5b9cbaee6b5f.html">理解 JavaScript 中的原型对象</a>
+                <div class="level article-meta is-mobile">
+                    <div class="level-left">
+                        
+                            <div class="level-item is-size-7 is-uppercase">
+                                <a class="is-link-light is-link" href="/categories/Tech-Notes/">Tech Notes</a> / <a class="is-link-light is-link" href="/categories/Tech-Notes/JavaScript-Essence/">JavaScript Essence</a>
+                            </div>
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+    </article>
+
+    <article class="media">
+       
+        <div class="media-content">
+            <div class="content">
+                <time class="has-text-light is-size-7 is-block" datetime="2019-03-19T08:00:00.000Z">2019-03-19</time>
+                <a class="is-link-strong is-size-6 is-single-line" href="/posts/001aa9d7541f3ee9.html">JavaScript 实现函数防抖与函数节流</a>
+                <div class="level article-meta is-mobile">
+                    <div class="level-left">
+                        
+                            <div class="level-item is-size-7 is-uppercase">
+                                <a class="is-link-light is-link" href="/categories/Tech-Notes/">Tech Notes</a>
+                            </div>
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+    </article>
+
+    </div>
+</div>
+        
+            <div class="card">
+    <header class="card-header">
+        <h3 class="card-header-title">标签</h3>
+    </header>
+    <div class="card-content">
+        <div class="menu">
+            <ul class="menu-list">
+                <!-- 
+ * 标签列表
+ * @param {Object} list - a list of tags
+ -->
+
+    
+        <li>
+            <a class="level is-marginless" href="/tags/Interviews/">
+                <span class="level-start">
+                    <span class="level-item">Interviews</span>
+                </span>
+                <span class="level-end">
+                    <span class="level-item tag">0</span>
+                </span>
+            </a>
+        </li>
+    
+        <li>
+            <a class="level is-marginless" href="/tags/JavaScript/">
+                <span class="level-start">
+                    <span class="level-item">JavaScript</span>
+                </span>
+                <span class="level-end">
+                    <span class="level-item tag">6</span>
+                </span>
+            </a>
+        </li>
+    
+        <li>
+            <a class="level is-marginless" href="/tags/Design-Pattern/">
+                <span class="level-start">
+                    <span class="level-item">Design Pattern</span>
+                </span>
+                <span class="level-end">
+                    <span class="level-item tag">1</span>
+                </span>
+            </a>
+        </li>
+    
+        <li>
+            <a class="level is-marginless" href="/tags/WebGL/">
+                <span class="level-start">
+                    <span class="level-item">WebGL</span>
+                </span>
+                <span class="level-end">
+                    <span class="level-item tag">0</span>
+                </span>
+            </a>
+        </li>
+    
+        <li>
+            <a class="level is-marginless" href="/tags/React/">
+                <span class="level-start">
+                    <span class="level-item">React</span>
+                </span>
+                <span class="level-end">
+                    <span class="level-item tag">0</span>
+                </span>
+            </a>
+        </li>
+    
+
+            </ul>
+        </div>
+    </div>
+    <div class="card-footer">
+        
+            <a class="button is-fullwidth is-primary" href="/tags">更多标签</a>
+        
+    </div>
+</div>
+        
+            <div class="card">
+    <header class="card-header">
+        <h3 class="card-header-title">
+            分类
+        </h3>
+    </header>
+    <div class="card-content">
+        <div class="menu">
+            <ul class="menu-list">
+                <!-- 
+ * 分类列表
+ * @param {Object} list - a list of categories
+ -->
+
+    
+        <li>
+            <a class="level is-marginless" href="/categories/Tech-Notes/">
+                <span class="level-start">
+                    <span class="level-item">Tech Notes</span>
+                </span>
+                <span class="level-end">
+                    <span class="level-item tag">6</span>
+                </span>
+            </a>
+            
+        </li>
+    
+
+            </ul>
+        </div>
+    </div>
+    <div class="card-footer">
+        
+            <a class="button is-fullwidth is-primary" href="/categories">详细分类</a>
+        
+    </div>
+</div>
+        
+    </div>
+
+            </div>
+        </div>
+    <!-- Footer -->
+    <footer class="footer">
+    <div class="container">
+        <div class="level">
+            <div class="level-start has-text-centered-mobile">
+                <a class="footer-logo is-block" href="/">
+                    
+                        <img src="/images/I-Know-JS.png" alt="理解 JavaScript 中的事件循环" height="28">
+                    
+                </a>
+                <p class="is-size-7">&copy; 2019 Ricky&#39;s Blog Powered by <a href="http://hexo.io/" target="_blank">Hexo</a> & <a href="https://github.com/Rickkkkkky/hexo-theme-coriander">Coriander</a></p>
+            </div>
+        </div>
+    </div>
+</footer>
+    </section>
+
+
+    <script src="/scripts/main.js"></script>
+
+</body>
+</html>

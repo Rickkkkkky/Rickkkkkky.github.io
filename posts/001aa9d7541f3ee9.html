@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head><meta name="generator" content="Hexo 3.8.0">
+    <!--
+ * <head> 标签
+ -->
+<meta charset="utf-8">
+<title>JavaScript 实现函数防抖与函数节流 - Ricky&#39;s Blog</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+<!-- Favicon -->
+
+    <link rel="icon" href="/images/I-Know-JS.png" type="image/x-icon">
+
+
+<link rel="stylesheet" href="/styles/lib/typo/typo.css">
+
+<!-- Highlight -->
+
+    <link rel="stylesheet" href="/styles/lib/highlight/atom-one-dark-reasonable.css">
+
+
+<!-- Custom Style -->
+<link rel="stylesheet" href="/styles/schemes/rb.css">
+<!-- <link rel="stylesheet" href="/styles/style.css"> -->
+
+<!-- JQuery -->
+<script src="/scripts/lib/jquery.slim.min.js"></script>
+
+</head>
+<body class="is-3-column has-navbar-fixed-top">
+
+    <!-- Navigation Bar -->
+    <!--
+ * 导航栏
+ -->
+<nav class="navbar navbar-main is-fixed-top">
+    <div class="container">
+        <!-- Nav Brand -->
+        <div class="navbar-brand is-flex-center">
+            <!-- Logo -->
+            <a class="navbar-item navbar-logo" href="/">
+                
+                    <img src="/images/I-Know-JS.png" alt="JavaScript 实现函数防抖与函数节流">
+                
+            </a>
+            <!-- Nav Menu Button -->
+            <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false" data-target="site-menu">
+                <span aria-hidden="true"></span>
+                <span aria-hidden="true"></span>
+                <span aria-hidden="true"></span>
+            </a>
+        </div>
+        <!-- Nav Menu -->
+        <div class="navbar-menu" id="site-menu">
+            <div class="navbar-start">
+                <!-- Home -->
+                <a class="navbar-item " href="/">首页</a>
+                <!-- Archives -->
+                <a class="navbar-item " href="/archives">归档</a>
+                <!-- Categories -->
+                <a class="navbar-item " href="/categories">分类</a>
+                <!-- Tags -->
+                <a class="navbar-item " href="/tags">标签</a>
+                <!-- Other Menu Item -->
+                
+                    
+                
+            </div>
+        </div>
+        <div class="navbar-end"></div>
+    </div>
+</nav>
+
+    <!-- Content -->
+    <section class="main">
+        <div class="container">
+            <div class="columns">
+                <div class="column is-8-tablet is-8-desktop is-6-widescreen has-order-2">
+                    <!--
+ * 文章
+ * @param {Object} post
+ * @param {boolean} hasMore
+ -->
+<div class="card">
+    <!-- Thumbnail -->
+    
+    <div class="card-content article">
+        <!-- Post Infos -->
+        
+            <div class="level article-meta is-size-7 is-uppercase is-mobile is-overflow-x-auto">
+                <div class="level-left">
+                    <!-- Post Date -->
+                    <time class="level-item has-text-light" datetime="2019-03-19T08:00:00.000Z">4 个月前 ( 2019 03.19 )</time>
+                    <!-- Categories -->
+                    
+                        <div class="level-item is-size-7 is-uppercase">
+                            <a class="is-link-light is-link" href="/categories/Tech-Notes/">Tech Notes</a>
+                        </div>
+                    
+                    <!-- Read Time -->
+                    
+                        <span class="level-item has-text-light">
+                            大约 378 字 ( 阅读时间：3 分钟 )
+                        </span>
+                    
+                </div>
+            </div>
+        
+        <!-- Article Title -->
+        <h1 class="title is-size-3 is-size-4-mobile has-text-weight-normal">
+            <a class="is-link-strong" href="/posts/001aa9d7541f3ee9.html">JavaScript 实现函数防抖与函数节流</a>
+        </h1>
+        <!-- Tags -->
+        
+            <div class="level is-mobile">
+                <div class="level-left">
+                    
+                        <div class="level-item">
+                            <a class="button is-size-7 is-primary" href="/tags/JavaScript/">JavaScript</a>
+                        </div>
+                    
+                </div>
+            </div>
+        
+        <!-- Article Content -->
+        <div class="content">
+            <h2 id="函数防抖"><a class="markdownIt-Anchor" href="#函数防抖"></a> 函数防抖</h2>
+<p>函数防抖（debounce）的基本概念是在函数频繁被调用的情况下，只有函数调用的时间间隔超过指定间隔的时候，函数的逻辑才执行。</p>
+<h3 id="使用场景"><a class="markdownIt-Anchor" href="#使用场景"></a> 使用场景</h3>
+<ul>
+<li>用户输入后验证表单或查询搜索；</li>
+<li>判断滚动条是否滑动到底部；</li>
+</ul>
+<a id="more"></a>
+<h3 id="简单实现"><a class="markdownIt-Anchor" href="#简单实现"></a> 简单实现</h3>
+<figure class="highlight javascript hljs"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="hljs-keyword">const</span> debounce = <span class="hljs-function">(<span class="hljs-params">fn, delay</span>) =&gt;</span> &#123;</span><br><span class="line">  <span class="hljs-keyword">let</span> timer = <span class="hljs-literal">null</span></span><br><span class="line">  <span class="hljs-keyword">return</span> <span class="hljs-function">(<span class="hljs-params">...args</span>) =&gt;</span> &#123;</span><br><span class="line">    <span class="hljs-keyword">const</span> ctx = <span class="hljs-keyword">this</span></span><br><span class="line">    clearTimeout(timer)</span><br><span class="line">    timer = setTimeout(<span class="hljs-function"><span class="hljs-params">()</span> =&gt;</span> &#123;</span><br><span class="line">      fn.apply(ctx, args)</span><br><span class="line">    &#125;, delay)</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="函数节流"><a class="markdownIt-Anchor" href="#函数节流"></a> 函数节流</h2>
+<p>函数节流（throttle）是指在指定的时间范围内，函数的逻辑只执行一次。</p>
+<h3 id="使用场景-2"><a class="markdownIt-Anchor" href="#使用场景-2"></a> 使用场景</h3>
+<ul>
+<li>DOM 拖拽；</li>
+<li>窗口 resize；</li>
+</ul>
+<h3 id="简单实现-2"><a class="markdownIt-Anchor" href="#简单实现-2"></a> 简单实现</h3>
+<figure class="highlight javascript hljs"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="hljs-keyword">const</span> throttle = <span class="hljs-function">(<span class="hljs-params">fn, gap</span>) =&gt;</span> &#123;</span><br><span class="line">  <span class="hljs-keyword">let</span> timer = <span class="hljs-literal">null</span></span><br><span class="line">  <span class="hljs-keyword">let</span> start = <span class="hljs-keyword">new</span> <span class="hljs-built_in">Date</span>().getTime()</span><br><span class="line">  <span class="hljs-keyword">return</span> <span class="hljs-function">(<span class="hljs-params">...args</span>) =&gt;</span> &#123;</span><br><span class="line">    <span class="hljs-keyword">const</span> ctx = <span class="hljs-keyword">this</span></span><br><span class="line">    <span class="hljs-keyword">const</span> current = <span class="hljs-keyword">new</span> <span class="hljs-built_in">Date</span>().getTime()</span><br><span class="line">    clearTimeout(timer)</span><br><span class="line">    <span class="hljs-keyword">if</span> (current - start &gt;= gap) &#123;</span><br><span class="line">      fn.apply(ctx, args)</span><br><span class="line">      start = current</span><br><span class="line">    &#125; <span class="hljs-keyword">else</span> &#123;</span><br><span class="line">      timer = setTimeout(<span class="hljs-function"><span class="hljs-params">()</span> =&gt;</span> &#123;</span><br><span class="line">        fn.apply(ctx, args)</span><br><span class="line">      &#125;, gap)</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="两者的区别"><a class="markdownIt-Anchor" href="#两者的区别"></a> 两者的区别</h2>
+<figure class="highlight javascript hljs"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="hljs-keyword">const</span> sayDebounce = debounce(<span class="hljs-function"><span class="hljs-params">()</span> =&gt;</span> &#123;</span><br><span class="line">  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">'Debounce'</span>)</span><br><span class="line">&#125;, <span class="hljs-number">100</span>)</span><br><span class="line"><span class="hljs-keyword">let</span> i = <span class="hljs-number">0</span></span><br><span class="line"><span class="hljs-keyword">while</span> (i &lt; <span class="hljs-number">100000</span>) &#123;</span><br><span class="line">  sayDebounce()</span><br><span class="line">  i++</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="hljs-keyword">const</span> sayThrottle = throttle(<span class="hljs-function"><span class="hljs-params">()</span> =&gt;</span> &#123;</span><br><span class="line">  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">'Throttle'</span>)</span><br><span class="line">&#125;, <span class="hljs-number">100</span>)</span><br><span class="line">i = <span class="hljs-number">0</span></span><br><span class="line"><span class="hljs-keyword">while</span> (i &lt; <span class="hljs-number">100000</span>) &#123;</span><br><span class="line">  sayThrottle()</span><br><span class="line">  i++</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>上面的例子中，控制台输出了 1 次 <code>'Debounce'</code> 和 8 次 <code>'Throttle'</code>（结果因设备而异）。</p>
+<p>函数防抖在函数被连续调用的情况下，只要相邻两次调用的时间间隔不超过设定的阈值，就只有最后一次函数调用会执行函数逻辑；而函数节流则不管函数调用的时间间隔，它保证函数在一段时间范围内一定会执行并且只执行一次。</p>
+
+        </div>
+        <!-- Read More -->
+        
+    </div>
+</div>
+                </div>
+                <!--
+ * 侧边列
+ * @param {string} side - left or right
+ -->
+
+    <div class="column column-left is-4-tablet is-4-desktop is-3-widescreen is-hidden-mobile has-order-1">
+        
+            <!-- 
+ * 个人简介部件
+ -->
+<div class="card">
+    <div class="card-content">
+        <nav class="level">
+            <div class="level-item has-text-centered">
+                <div>
+                    <!-- Avatar -->
+                    <img class="image is-128x128" src="/images/I-Know-JS.png" alt="Ricky">
+                    <!-- Author -->
+                    <p class="is-size-4 is-block">
+                        Ricky
+                    </p>
+                    <!-- Author Description -->
+                    <p class="is-size-6 is-block">
+                        JavaScript Developer
+                    </p>
+                    <!-- E-mail -->
+                    <p class="is-size-8 is-block">
+                        
+                        <a href="mailto:rickkkkkkkkky@foxmail.com" title="rickkkkkkkkky@foxmail.com" class="is-link-light">rickkkkkkkkky@foxmail.com</a>
+                    </p>
+                </div>
+            </div>
+        </nav>
+        <nav class="level is-mobile">
+            <!-- Post Count -->
+            <div class="level-item has-text-centered is-marginless">
+                <div>
+                    <p class="heading">
+                        文章
+                    </p>
+                    <p class="title has-text-weight-normal">
+                        6
+                    </p>
+                </div>
+            </div>
+            <!-- Category Count -->
+            <div class="level-item has-text-centered is-marginless">
+                <div>
+                    <p class="heading">
+                        分类
+                    </p>
+                    <p class="title has-text-weight-normal">
+                        4
+                    </p>
+                </div>
+            </div>
+            <!-- Tag Count -->
+            <div class="level-item has-text-centered is-marginless">
+                <div>
+                    <p class="heading">
+                        标签
+                    </p>
+                    <p class="title has-text-weight-normal">
+                        6
+                    </p>
+                </div>
+            </div>
+        </nav>
+        <!-- Follow Link -->
+        <div class="level">
+            <a class="level-item button is-primary" href="https://github.com/Rickkkkkky" target="_blank">
+                关注
+            </a>
+        </div>
+    </div>
+</div>
+        
+            
+<div class="card">
+    <header class="card-header">
+        <h3 class="card-header-title">
+            归档
+        </h3>
+    </header>
+    <div class="card-content">
+        <div class="menu">
+            <ul class="menu-list">
+                
+                    
+                        <li>
+                            <a class="level is-marginless" href="/archives/2019/01">
+                                <span class="level-start">
+                                    <span class="level-item">
+                                        一月 - 2019
+                                    </span>
+                                </span>
+                                <span class="level-end">
+                                    <span class="level-item tag">
+                                        1
+                                    </span>
+                                </span>
+                            </a>
+                        </li>
+                    
+                        <li>
+                            <a class="level is-marginless" href="/archives/2019/03">
+                                <span class="level-start">
+                                    <span class="level-item">
+                                        三月 - 2019
+                                    </span>
+                                </span>
+                                <span class="level-end">
+                                    <span class="level-item tag">
+                                        2
+                                    </span>
+                                </span>
+                            </a>
+                        </li>
+                    
+                        <li>
+                            <a class="level is-marginless" href="/archives/2019/04">
+                                <span class="level-start">
+                                    <span class="level-item">
+                                        四月 - 2019
+                                    </span>
+                                </span>
+                                <span class="level-end">
+                                    <span class="level-item tag">
+                                        2
+                                    </span>
+                                </span>
+                            </a>
+                        </li>
+                    
+                        <li>
+                            <a class="level is-marginless" href="/archives/2019/06">
+                                <span class="level-start">
+                                    <span class="level-item">
+                                        六月 - 2019
+                                    </span>
+                                </span>
+                                <span class="level-end">
+                                    <span class="level-item tag">
+                                        1
+                                    </span>
+                                </span>
+                            </a>
+                        </li>
+                    
+                
+            </ul>
+        </div>
+    </div>
+    <div class="card-footer">
+        
+            <a class="button is-fullwidth is-primary" href="/archives">全部归档</a>
+        
+    </div>
+</div>
+        
+    </div>
+
+                <!--
+ * 侧边列
+ * @param {string} side - left or right
+ -->
+
+    <div class="column column-right is-4-tablet is-4-desktop is-3-widescreen is-hidden-touch is-hidden-desktop-only has-order-3">
+        
+            <div class="card">
+    <header class="card-header">
+        <h3 class="card-header-title">最近文章</h3>
+    </header>
+    <div class="card-content">
+        <!-- 
+ * @param {Object} posts
+ -->
+
+    <article class="media">
+       
+        <div class="media-content">
+            <div class="content">
+                <time class="has-text-light is-size-7 is-block" datetime="2019-06-20T08:00:00.000Z">2019-06-20</time>
+                <a class="is-link-strong is-size-6 is-single-line" href="/posts/977c1ee025c5154f.html">理解 JavaScript 中的 Promise</a>
+                <div class="level article-meta is-mobile">
+                    <div class="level-left">
+                        
+                            <div class="level-item is-size-7 is-uppercase">
+                                <a class="is-link-light is-link" href="/categories/Tech-Notes/">Tech Notes</a> / <a class="is-link-light is-link" href="/categories/Tech-Notes/JavaScript-Essence/">JavaScript Essence</a>
+                            </div>
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+    </article>
+
+    <article class="media">
+       
+        <div class="media-content">
+            <div class="content">
+                <time class="has-text-light is-size-7 is-block" datetime="2019-04-19T08:00:00.000Z">2019-04-19</time>
+                <a class="is-link-strong is-size-6 is-single-line" href="/posts/99bdc41f3fe568a2.html">理解 JavaScript 中的事件循环</a>
+                <div class="level article-meta is-mobile">
+                    <div class="level-left">
+                        
+                            <div class="level-item is-size-7 is-uppercase">
+                                <a class="is-link-light is-link" href="/categories/Tech-Notes/">Tech Notes</a> / <a class="is-link-light is-link" href="/categories/Tech-Notes/JavaScript-Essence/">JavaScript Essence</a>
+                            </div>
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+    </article>
+
+    <article class="media">
+       
+        <div class="media-content">
+            <div class="content">
+                <time class="has-text-light is-size-7 is-block" datetime="2019-04-11T08:00:00.000Z">2019-04-11</time>
+                <a class="is-link-strong is-size-6 is-single-line" href="/posts/666b8730271d1bfc.html">JavaScript 实现继承的常用模式</a>
+                <div class="level article-meta is-mobile">
+                    <div class="level-left">
+                        
+                            <div class="level-item is-size-7 is-uppercase">
+                                <a class="is-link-light is-link" href="/categories/Tech-Notes/">Tech Notes</a>
+                            </div>
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+    </article>
+
+    <article class="media">
+       
+        <div class="media-content">
+            <div class="content">
+                <time class="has-text-light is-size-7 is-block" datetime="2019-03-21T08:00:00.000Z">2019-03-21</time>
+                <a class="is-link-strong is-size-6 is-single-line" href="/posts/01da5b9cbaee6b5f.html">理解 JavaScript 中的原型对象</a>
+                <div class="level article-meta is-mobile">
+                    <div class="level-left">
+                        
+                            <div class="level-item is-size-7 is-uppercase">
+                                <a class="is-link-light is-link" href="/categories/Tech-Notes/">Tech Notes</a> / <a class="is-link-light is-link" href="/categories/Tech-Notes/JavaScript-Essence/">JavaScript Essence</a>
+                            </div>
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+    </article>
+
+    <article class="media">
+       
+        <div class="media-content">
+            <div class="content">
+                <time class="has-text-light is-size-7 is-block" datetime="2019-03-19T08:00:00.000Z">2019-03-19</time>
+                <a class="is-link-strong is-size-6 is-single-line" href="/posts/001aa9d7541f3ee9.html">JavaScript 实现函数防抖与函数节流</a>
+                <div class="level article-meta is-mobile">
+                    <div class="level-left">
+                        
+                            <div class="level-item is-size-7 is-uppercase">
+                                <a class="is-link-light is-link" href="/categories/Tech-Notes/">Tech Notes</a>
+                            </div>
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+    </article>
+
+    </div>
+</div>
+        
+            <div class="card">
+    <header class="card-header">
+        <h3 class="card-header-title">标签</h3>
+    </header>
+    <div class="card-content">
+        <div class="menu">
+            <ul class="menu-list">
+                <!-- 
+ * 标签列表
+ * @param {Object} list - a list of tags
+ -->
+
+    
+        <li>
+            <a class="level is-marginless" href="/tags/Interviews/">
+                <span class="level-start">
+                    <span class="level-item">Interviews</span>
+                </span>
+                <span class="level-end">
+                    <span class="level-item tag">0</span>
+                </span>
+            </a>
+        </li>
+    
+        <li>
+            <a class="level is-marginless" href="/tags/JavaScript/">
+                <span class="level-start">
+                    <span class="level-item">JavaScript</span>
+                </span>
+                <span class="level-end">
+                    <span class="level-item tag">6</span>
+                </span>
+            </a>
+        </li>
+    
+        <li>
+            <a class="level is-marginless" href="/tags/Design-Pattern/">
+                <span class="level-start">
+                    <span class="level-item">Design Pattern</span>
+                </span>
+                <span class="level-end">
+                    <span class="level-item tag">1</span>
+                </span>
+            </a>
+        </li>
+    
+        <li>
+            <a class="level is-marginless" href="/tags/WebGL/">
+                <span class="level-start">
+                    <span class="level-item">WebGL</span>
+                </span>
+                <span class="level-end">
+                    <span class="level-item tag">0</span>
+                </span>
+            </a>
+        </li>
+    
+        <li>
+            <a class="level is-marginless" href="/tags/React/">
+                <span class="level-start">
+                    <span class="level-item">React</span>
+                </span>
+                <span class="level-end">
+                    <span class="level-item tag">0</span>
+                </span>
+            </a>
+        </li>
+    
+
+            </ul>
+        </div>
+    </div>
+    <div class="card-footer">
+        
+            <a class="button is-fullwidth is-primary" href="/tags">更多标签</a>
+        
+    </div>
+</div>
+        
+            <div class="card">
+    <header class="card-header">
+        <h3 class="card-header-title">
+            分类
+        </h3>
+    </header>
+    <div class="card-content">
+        <div class="menu">
+            <ul class="menu-list">
+                <!-- 
+ * 分类列表
+ * @param {Object} list - a list of categories
+ -->
+
+    
+        <li>
+            <a class="level is-marginless" href="/categories/Tech-Notes/">
+                <span class="level-start">
+                    <span class="level-item">Tech Notes</span>
+                </span>
+                <span class="level-end">
+                    <span class="level-item tag">6</span>
+                </span>
+            </a>
+            
+        </li>
+    
+
+            </ul>
+        </div>
+    </div>
+    <div class="card-footer">
+        
+            <a class="button is-fullwidth is-primary" href="/categories">详细分类</a>
+        
+    </div>
+</div>
+        
+    </div>
+
+            </div>
+        </div>
+    <!-- Footer -->
+    <footer class="footer">
+    <div class="container">
+        <div class="level">
+            <div class="level-start has-text-centered-mobile">
+                <a class="footer-logo is-block" href="/">
+                    
+                        <img src="/images/I-Know-JS.png" alt="JavaScript 实现函数防抖与函数节流" height="28">
+                    
+                </a>
+                <p class="is-size-7">&copy; 2019 Ricky&#39;s Blog Powered by <a href="http://hexo.io/" target="_blank">Hexo</a> & <a href="https://github.com/Rickkkkkky/hexo-theme-coriander">Coriander</a></p>
+            </div>
+        </div>
+    </div>
+</footer>
+    </section>
+
+
+    <script src="/scripts/main.js"></script>
+
+</body>
+</html>

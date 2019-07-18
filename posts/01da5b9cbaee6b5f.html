@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head><meta name="generator" content="Hexo 3.8.0">
+    <!--
+ * <head> 标签
+ -->
+<meta charset="utf-8">
+<title>理解 JavaScript 中的原型对象 - Ricky&#39;s Blog</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+<!-- Favicon -->
+
+    <link rel="icon" href="/images/I-Know-JS.png" type="image/x-icon">
+
+
+<link rel="stylesheet" href="/styles/lib/typo/typo.css">
+
+<!-- Highlight -->
+
+    <link rel="stylesheet" href="/styles/lib/highlight/atom-one-dark-reasonable.css">
+
+
+<!-- Custom Style -->
+<link rel="stylesheet" href="/styles/schemes/rb.css">
+<!-- <link rel="stylesheet" href="/styles/style.css"> -->
+
+<!-- JQuery -->
+<script src="/scripts/lib/jquery.slim.min.js"></script>
+
+</head>
+<body class="is-3-column has-navbar-fixed-top">
+
+    <!-- Navigation Bar -->
+    <!--
+ * 导航栏
+ -->
+<nav class="navbar navbar-main is-fixed-top">
+    <div class="container">
+        <!-- Nav Brand -->
+        <div class="navbar-brand is-flex-center">
+            <!-- Logo -->
+            <a class="navbar-item navbar-logo" href="/">
+                
+                    <img src="/images/I-Know-JS.png" alt="理解 JavaScript 中的原型对象">
+                
+            </a>
+            <!-- Nav Menu Button -->
+            <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false" data-target="site-menu">
+                <span aria-hidden="true"></span>
+                <span aria-hidden="true"></span>
+                <span aria-hidden="true"></span>
+            </a>
+        </div>
+        <!-- Nav Menu -->
+        <div class="navbar-menu" id="site-menu">
+            <div class="navbar-start">
+                <!-- Home -->
+                <a class="navbar-item " href="/">首页</a>
+                <!-- Archives -->
+                <a class="navbar-item " href="/archives">归档</a>
+                <!-- Categories -->
+                <a class="navbar-item " href="/categories">分类</a>
+                <!-- Tags -->
+                <a class="navbar-item " href="/tags">标签</a>
+                <!-- Other Menu Item -->
+                
+                    
+                
+            </div>
+        </div>
+        <div class="navbar-end"></div>
+    </div>
+</nav>
+
+    <!-- Content -->
+    <section class="main">
+        <div class="container">
+            <div class="columns">
+                <div class="column is-8-tablet is-8-desktop is-6-widescreen has-order-2">
+                    <!--
+ * 文章
+ * @param {Object} post
+ * @param {boolean} hasMore
+ -->
+<div class="card">
+    <!-- Thumbnail -->
+    
+    <div class="card-content article">
+        <!-- Post Infos -->
+        
+            <div class="level article-meta is-size-7 is-uppercase is-mobile is-overflow-x-auto">
+                <div class="level-left">
+                    <!-- Post Date -->
+                    <time class="level-item has-text-light" datetime="2019-03-21T08:00:00.000Z">4 个月前 ( 2019 03.21 )</time>
+                    <!-- Categories -->
+                    
+                        <div class="level-item is-size-7 is-uppercase">
+                            <a class="is-link-light is-link" href="/categories/Tech-Notes/">Tech Notes</a> / <a class="is-link-light is-link" href="/categories/Tech-Notes/JavaScript-Essence/">JavaScript Essence</a>
+                        </div>
+                    
+                    <!-- Read Time -->
+                    
+                        <span class="level-item has-text-light">
+                            大约 1531 字 ( 阅读时间：10 分钟 )
+                        </span>
+                    
+                </div>
+            </div>
+        
+        <!-- Article Title -->
+        <h1 class="title is-size-3 is-size-4-mobile has-text-weight-normal">
+            <a class="is-link-strong" href="/posts/01da5b9cbaee6b5f.html">理解 JavaScript 中的原型对象</a>
+        </h1>
+        <!-- Tags -->
+        
+            <div class="level is-mobile">
+                <div class="level-left">
+                    
+                        <div class="level-item">
+                            <a class="button is-size-7 is-primary" href="/tags/JavaScript/">JavaScript</a>
+                        </div>
+                    
+                </div>
+            </div>
+        
+        <!-- Article Content -->
+        <div class="content">
+            <h2 id="原型和原型对象"><a class="markdownIt-Anchor" href="#原型和原型对象"></a> 原型和原型对象</h2>
+<blockquote>
+<p>All ordinary objects have an internal slot called <code>[[Prototype]]</code>. The value of this internal slot is either <code>null</code> or an <code>object</code> and is used for implementing inheritance. Data properties of the <code>[[Prototype]]</code> object are inherited (and visible as properties of the child object) for the purposes of get access, but not for set access. Accessor properties are inherited for both get access and set access. – <a href="https://tc39.github.io/ecma262/#sec-ordinary-object-internal-methods-and-internal-slots" target="_blank" rel="noopener">Ordinary Object Internal Methods and Internal Slots</a></p>
+</blockquote>
+<p>在 ES 标准中，所有的普通对象都有一个用于实现继承的内部属性，称为 <code>[[Prototype]]</code>，它的值是 <code>null</code> 或者一个 <code>object</code> 类型的值。对象访问 <code>[[Prototype]]</code> 对象的数据属性时，只能获取属性的值而不能对属性进行赋值（只能以 <code>get</code> 访问器的形式访问属性）；访问 <code>[[Prototype]]</code> 对象的访问器属性时，属性的 <code>get</code> 和 <code>set</code> 访问器都是允许访问的。</p>
+<a id="more"></a>
+<h3 id="原型对象的创建与绑定过程"><a class="markdownIt-Anchor" href="#原型对象的创建与绑定过程"></a> 原型对象的创建与绑定过程</h3>
+<ul>
+<li>当创建一个函数时，会为其创建一个 <code>prototype</code> 属性；</li>
+<li>同时，还会创建一个默认的包含 <code>constructor</code> 属性的对象作为函数的原型；</li>
+<li>赋值：函数的 <code>prototype</code> 属性 = 函数的原型；函数原型的 <code>constructor</code> 属性 = 该函数自身；</li>
+<li>通过 <code>new</code> 操作符调用函数创建的实例，其 <code>[[Prototype]]</code> 属性 = 函数的 <code>prototype</code> 属性。</li>
+</ul>
+<p>如果函数的 <code>prototype</code> 属性赋值为其他对象，新的原型不会像默认的原型一样自动创建一个不可枚举的 <code>constructor</code> 属性；可以使用 <code>Object.defineProperty()</code> 方法为原型创建 <code>constructor</code> 属性。</p>
+<p>值得注意的是，ES6 中的箭头函数没有 <code>prototype</code> 属性。</p>
+<p>为了避免混淆，本文将函数的 <code>prototype</code> 属性称为函数的原型；将对象的 <code>[[Prototype]]</code> 内部属性称为该对象的原型对象。</p>
+<h3 id="与原型对象相关的方法"><a class="markdownIt-Anchor" href="#与原型对象相关的方法"></a> 与原型对象相关的方法</h3>
+<p>原型对象是连接构造函数与其实例之间的桥梁。但由于 <code>[[Prototype]]</code> 是内部属性，因此不能直接访问（部分浏览器在对象上实现了一个 <code>__proto__</code> 属性指向原型对象）。</p>
+<ul>
+<li><code>Object.prototype.isPrototypeOf(object)</code> - 判断调用 <code>isPrototypeOf()</code> 方法的对象是否在 <code>object</code> 的原型链上。</li>
+<li><code>Object.getPrototypeOf(object)</code> - 返回 <code>object</code> 的原型对象。</li>
+<li><code>Object.create(proto, [propertiesObject])</code> - 创建一个新对象，并将 <code>proto</code> 作为该对象的原型对象。</li>
+</ul>
+<h3 id="原型和原型对象的关系"><a class="markdownIt-Anchor" href="#原型和原型对象的关系"></a> 原型和原型对象的关系</h3>
+<p>原型和原型对象的关系如下图所示。一般情况下，函数的原型与该函数的实例的原型对象实际上是同一个对象。</p>
+<p><a href="https://raw.githubusercontent.com/Rickkkkkky/blog-gallery/master/prototype.jpg" target="_blank" rel="noopener"><img src="https://raw.githubusercontent.com/Rickkkkkky/blog-gallery/master/prototype.jpg" alt="prototype.jpg"></a></p>
+<h3 id="function-和-object-的原型对象"><a class="markdownIt-Anchor" href="#function-和-object-的原型对象"></a> Function 和 Object 的原型对象</h3>
+<p>函数作为一个引用类型的值，它的原型对象是 <code>Function.prototype</code>。</p>
+<figure class="highlight javascript hljs"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">People</span> (<span class="hljs-params"></span>) </span>&#123;&#125;</span><br><span class="line"></span><br><span class="line"><span class="hljs-keyword">const</span> people = <span class="hljs-keyword">new</span> People()</span><br><span class="line"></span><br><span class="line"><span class="hljs-built_in">console</span>.log(<span class="hljs-built_in">Object</span>.getPrototypeOf(people) === People.prototype)    <span class="hljs-comment">// true</span></span><br><span class="line"><span class="hljs-built_in">console</span>.log(<span class="hljs-built_in">Object</span>.getPrototypeOf(People) === <span class="hljs-built_in">Function</span>.prototype)    <span class="hljs-comment">// true</span></span><br></pre></td></tr></table></figure>
+<p><code>Function</code> 和 <code>Object</code> 本身也是一个函数，因此它们的原型对象也是 <code>Function.prototype</code>。</p>
+<figure class="highlight javascript hljs"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="hljs-built_in">console</span>.log(<span class="hljs-built_in">Object</span>.getPrototypeOf(<span class="hljs-built_in">Function</span>) === <span class="hljs-built_in">Function</span>.prototype)    <span class="hljs-comment">// true</span></span><br><span class="line"><span class="hljs-built_in">console</span>.log(<span class="hljs-built_in">Function</span> <span class="hljs-keyword">instanceof</span> <span class="hljs-built_in">Function</span>)    <span class="hljs-comment">// true</span></span><br><span class="line"><span class="hljs-built_in">console</span>.log(<span class="hljs-built_in">Object</span>.getPrototypeOf(<span class="hljs-built_in">Object</span>) === <span class="hljs-built_in">Function</span>.prototype)    <span class="hljs-comment">// true</span></span><br><span class="line"><span class="hljs-built_in">console</span>.log(<span class="hljs-built_in">Object</span> <span class="hljs-keyword">instanceof</span> <span class="hljs-built_in">Function</span>)    <span class="hljs-comment">// true</span></span><br></pre></td></tr></table></figure>
+<p>那么，这是不是就意味着 <code>Function</code> 是 <code>Function</code> 的实例呢？</p>
+<p>这个问题看似是类似于“鸡生蛋，蛋生鸡”的问题，但实际上，<code>Function</code> 是 ES 标准中的内置对象，是在代码运行之前就存在的，所以 <code>Function</code> 本身并不是通过 <code>Function</code> 创建的。但 <code>Function</code> 本身也是一个函数，因此语言在设计上让 <code>Function</code> 的原型对象为 <code>Function.prototype</code>。</p>
+<h2 id="原型链"><a class="markdownIt-Anchor" href="#原型链"></a> 原型链</h2>
+<h3 id="对象属性的搜索过程"><a class="markdownIt-Anchor" href="#对象属性的搜索过程"></a> 对象属性的搜索过程</h3>
+<p>当访问对象的属性时，会首先从该对象本身开始进行搜索，如果在对象上找到了所搜索的属性，则返回该属性的值；如果没有找到，则继续搜索该对象的原型对象。可以将对象属性的搜索过程视为一个递归的过程。</p>
+<figure class="highlight javascript hljs"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="hljs-comment">// 抽象化描述对象属性的搜索过程</span></span><br><span class="line"><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">search</span> (<span class="hljs-params">object, prop</span>) </span>&#123;</span><br><span class="line">  <span class="hljs-keyword">const</span> proto = <span class="hljs-built_in">Object</span>.getPrototypeOf(object)</span><br><span class="line">  <span class="hljs-keyword">if</span> (object.hasOwnProperty(prop)) &#123;</span><br><span class="line">    <span class="hljs-keyword">return</span> object.getOwnPropertyDescriptor(prop)</span><br><span class="line">  &#125; <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (proto) &#123;</span><br><span class="line">    search(proto, prop)</span><br><span class="line">  &#125; <span class="hljs-keyword">else</span> &#123;</span><br><span class="line">    <span class="hljs-keyword">return</span> <span class="hljs-literal">undefined</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>上面的函数简单描述了对象属性的搜索过程。由于一个对象的原型对象也拥有自己的原型对象，这种层层递进的关系就构成了原型链。</p>
+<figure class="highlight javascript hljs"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">People</span> (<span class="hljs-params">name</span>) </span>&#123;</span><br><span class="line">  <span class="hljs-keyword">this</span>.name = name || <span class="hljs-string">''</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">People.prototype.sayName = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) </span>&#123;</span><br><span class="line">  <span class="hljs-built_in">console</span>.log(<span class="hljs-keyword">this</span>.name)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">Man</span> (<span class="hljs-params">name</span>) </span>&#123;</span><br><span class="line">  People.call(<span class="hljs-keyword">this</span>, name)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">Man.prototype = <span class="hljs-keyword">new</span> People()</span><br><span class="line">Man.prototype.constructor = Man</span><br><span class="line">Man.prototype.sayGender = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) </span>&#123;</span><br><span class="line">  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">'MALE'</span>)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="hljs-keyword">let</span> man = <span class="hljs-keyword">new</span> Man(<span class="hljs-string">'Ricky'</span>)</span><br><span class="line">Man.sayGender()    <span class="hljs-comment">// MALE</span></span><br><span class="line">man.sayName()    <span class="hljs-comment">// Ricky</span></span><br></pre></td></tr></table></figure>
+<p>上面的示例中，<code>Man</code> 的实例的原型对象是 <code>Man.prototype</code>，而 <code>Man</code> 的原型又是 <code>People</code> 的实例，因此 <code>Man.prototype</code> 的原型对象是 <code>People.prototype</code>。<code>People.prototype</code> 是创建函数的时候生成的，它的原型对象是 <code>Object.prototype</code>。</p>
+<p><a href="https://raw.githubusercontent.com/Rickkkkkky/blog-gallery/master/prototype-chain.jpg" target="_blank" rel="noopener"><img src="https://raw.githubusercontent.com/Rickkkkkky/blog-gallery/master/prototype-chain.jpg" alt="prototype-chain.jpg"></a></p>
+<h3 id="修改原型"><a class="markdownIt-Anchor" href="#修改原型"></a> 修改原型</h3>
+<p>在原型链中查找属性值的过程是一次运行时的搜索过程，因此当原型的属性变化时，这些变化能够立即反映在已经创建的实例上。</p>
+<figure class="highlight javascript hljs"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">Man</span> (<span class="hljs-params"></span>) </span>&#123;&#125;</span><br><span class="line"></span><br><span class="line"><span class="hljs-keyword">const</span> man = <span class="hljs-keyword">new</span> Man()</span><br><span class="line"></span><br><span class="line"><span class="hljs-built_in">console</span>.log(man.gender)    <span class="hljs-comment">// undefined</span></span><br><span class="line"></span><br><span class="line">Man.prototype.gender = <span class="hljs-string">'MALE'</span></span><br><span class="line"></span><br><span class="line"><span class="hljs-built_in">console</span>.log(man.gender)    <span class="hljs-comment">// MALE</span></span><br></pre></td></tr></table></figure>
+<p>但是，当函数的 <code>prototype</code> 属性引用一个新对象时，已经创建的实例的 <code>[[Prototype]]</code> 内部属性所引用的对象不会发生改变。</p>
+<figure class="highlight javascript hljs"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">Man</span> (<span class="hljs-params"></span>) </span>&#123;&#125;</span><br><span class="line"></span><br><span class="line"><span class="hljs-keyword">const</span> man1 = <span class="hljs-keyword">new</span> Man()</span><br><span class="line"></span><br><span class="line">Man.prototype = &#123;</span><br><span class="line">  <span class="hljs-keyword">constructor</span>: Man,</span><br><span class="line">  gender: 'MALE'</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">const man2 = new Man()</span><br><span class="line"></span><br><span class="line">console.log(man1.gender)   // undefined</span><br><span class="line">console.log(man2.gender)   // MALE</span><br></pre></td></tr></table></figure>
+<p><a href="https://raw.githubusercontent.com/Rickkkkkky/blog-gallery/master/dynamic-prototype.jpg" target="_blank" rel="noopener"><img src="https://raw.githubusercontent.com/Rickkkkkky/blog-gallery/master/dynamic-prototype.jpg" alt="dynamic-prototype.jpg"></a></p>
+<h3 id="原型链的终点"><a class="markdownIt-Anchor" href="#原型链的终点"></a> 原型链的终点</h3>
+<p>JavaScript 中的引用类型值都是 <code>Object</code> 类型的，但事实上，所有原型链的终点都是 <code>null</code>，而不是 <code>Object.prototype</code>。</p>
+<figure class="highlight javascript hljs"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="hljs-keyword">const</span> obj = &#123;&#125;</span><br><span class="line"><span class="hljs-built_in">console</span>.log(<span class="hljs-built_in">Object</span>.getPrototypeOf(obj) === <span class="hljs-built_in">Object</span>.prototype)   <span class="hljs-comment">// true</span></span><br><span class="line"><span class="hljs-built_in">console</span>.log(<span class="hljs-built_in">Object</span>.getPrototypeOf(<span class="hljs-built_in">Object</span>.prototype))   <span class="hljs-comment">// null</span></span><br></pre></td></tr></table></figure>
+<p>在 <a href="https://es5.github.io/#x13.2.2" target="_blank" rel="noopener">ES 标准</a>中值得注意的一点：</p>
+<blockquote>
+<p>If Type(proto) is not Object, set the [[Prototype]] internal property of obj to the standard built-in Object prototype object</p>
+</blockquote>
+<p>如果函数的原型不是引用类型的值，通过 <code>new</code> 操作符调用构造函数时，创建的实例的原型对象实际上是 <code>Object.prototype</code>。</p>
+<figure class="highlight javascript hljs"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">People</span> (<span class="hljs-params"></span>) </span>&#123;&#125;</span><br><span class="line">People.prototype = <span class="hljs-literal">null</span></span><br><span class="line"><span class="hljs-keyword">const</span> people = <span class="hljs-keyword">new</span> People()</span><br><span class="line"><span class="hljs-built_in">console</span>.log(<span class="hljs-built_in">Object</span>.prototype.isPrototypeOf(people))    <span class="hljs-comment">// true</span></span><br><span class="line"><span class="hljs-built_in">console</span>.log(People.isPrototypeOf(people))    <span class="hljs-comment">// false</span></span><br></pre></td></tr></table></figure>
+<p>可以通过 <code>Object.create()</code> 方法创建没有原型链的对象。</p>
+<figure class="highlight javascript hljs"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="hljs-keyword">const</span> object = <span class="hljs-built_in">Object</span>.create(<span class="hljs-literal">null</span>)</span><br><span class="line"><span class="hljs-built_in">console</span>.log(<span class="hljs-built_in">Object</span>.getPrototypeOf(object))   <span class="hljs-comment">// null</span></span><br></pre></td></tr></table></figure>
+<hr>
+<blockquote>
+<p>参考内容</p>
+<ul>
+<li><a href="https://es5.github.io/" target="_blank" rel="noopener">Annotated ECMAScript 5</a></li>
+</ul>
+</blockquote>
+
+        </div>
+        <!-- Read More -->
+        
+    </div>
+</div>
+                </div>
+                <!--
+ * 侧边列
+ * @param {string} side - left or right
+ -->
+
+    <div class="column column-left is-4-tablet is-4-desktop is-3-widescreen is-hidden-mobile has-order-1">
+        
+            <!-- 
+ * 个人简介部件
+ -->
+<div class="card">
+    <div class="card-content">
+        <nav class="level">
+            <div class="level-item has-text-centered">
+                <div>
+                    <!-- Avatar -->
+                    <img class="image is-128x128" src="/images/I-Know-JS.png" alt="Ricky">
+                    <!-- Author -->
+                    <p class="is-size-4 is-block">
+                        Ricky
+                    </p>
+                    <!-- Author Description -->
+                    <p class="is-size-6 is-block">
+                        JavaScript Developer
+                    </p>
+                    <!-- E-mail -->
+                    <p class="is-size-8 is-block">
+                        
+                        <a href="mailto:rickkkkkkkkky@foxmail.com" title="rickkkkkkkkky@foxmail.com" class="is-link-light">rickkkkkkkkky@foxmail.com</a>
+                    </p>
+                </div>
+            </div>
+        </nav>
+        <nav class="level is-mobile">
+            <!-- Post Count -->
+            <div class="level-item has-text-centered is-marginless">
+                <div>
+                    <p class="heading">
+                        文章
+                    </p>
+                    <p class="title has-text-weight-normal">
+                        6
+                    </p>
+                </div>
+            </div>
+            <!-- Category Count -->
+            <div class="level-item has-text-centered is-marginless">
+                <div>
+                    <p class="heading">
+                        分类
+                    </p>
+                    <p class="title has-text-weight-normal">
+                        4
+                    </p>
+                </div>
+            </div>
+            <!-- Tag Count -->
+            <div class="level-item has-text-centered is-marginless">
+                <div>
+                    <p class="heading">
+                        标签
+                    </p>
+                    <p class="title has-text-weight-normal">
+                        6
+                    </p>
+                </div>
+            </div>
+        </nav>
+        <!-- Follow Link -->
+        <div class="level">
+            <a class="level-item button is-primary" href="https://github.com/Rickkkkkky" target="_blank">
+                关注
+            </a>
+        </div>
+    </div>
+</div>
+        
+            
+<div class="card">
+    <header class="card-header">
+        <h3 class="card-header-title">
+            归档
+        </h3>
+    </header>
+    <div class="card-content">
+        <div class="menu">
+            <ul class="menu-list">
+                
+                    
+                        <li>
+                            <a class="level is-marginless" href="/archives/2019/01">
+                                <span class="level-start">
+                                    <span class="level-item">
+                                        一月 - 2019
+                                    </span>
+                                </span>
+                                <span class="level-end">
+                                    <span class="level-item tag">
+                                        1
+                                    </span>
+                                </span>
+                            </a>
+                        </li>
+                    
+                        <li>
+                            <a class="level is-marginless" href="/archives/2019/03">
+                                <span class="level-start">
+                                    <span class="level-item">
+                                        三月 - 2019
+                                    </span>
+                                </span>
+                                <span class="level-end">
+                                    <span class="level-item tag">
+                                        2
+                                    </span>
+                                </span>
+                            </a>
+                        </li>
+                    
+                        <li>
+                            <a class="level is-marginless" href="/archives/2019/04">
+                                <span class="level-start">
+                                    <span class="level-item">
+                                        四月 - 2019
+                                    </span>
+                                </span>
+                                <span class="level-end">
+                                    <span class="level-item tag">
+                                        2
+                                    </span>
+                                </span>
+                            </a>
+                        </li>
+                    
+                        <li>
+                            <a class="level is-marginless" href="/archives/2019/06">
+                                <span class="level-start">
+                                    <span class="level-item">
+                                        六月 - 2019
+                                    </span>
+                                </span>
+                                <span class="level-end">
+                                    <span class="level-item tag">
+                                        1
+                                    </span>
+                                </span>
+                            </a>
+                        </li>
+                    
+                
+            </ul>
+        </div>
+    </div>
+    <div class="card-footer">
+        
+            <a class="button is-fullwidth is-primary" href="/archives">全部归档</a>
+        
+    </div>
+</div>
+        
+    </div>
+
+                <!--
+ * 侧边列
+ * @param {string} side - left or right
+ -->
+
+    <div class="column column-right is-4-tablet is-4-desktop is-3-widescreen is-hidden-touch is-hidden-desktop-only has-order-3">
+        
+            <div class="card">
+    <header class="card-header">
+        <h3 class="card-header-title">最近文章</h3>
+    </header>
+    <div class="card-content">
+        <!-- 
+ * @param {Object} posts
+ -->
+
+    <article class="media">
+       
+        <div class="media-content">
+            <div class="content">
+                <time class="has-text-light is-size-7 is-block" datetime="2019-06-20T08:00:00.000Z">2019-06-20</time>
+                <a class="is-link-strong is-size-6 is-single-line" href="/posts/977c1ee025c5154f.html">理解 JavaScript 中的 Promise</a>
+                <div class="level article-meta is-mobile">
+                    <div class="level-left">
+                        
+                            <div class="level-item is-size-7 is-uppercase">
+                                <a class="is-link-light is-link" href="/categories/Tech-Notes/">Tech Notes</a> / <a class="is-link-light is-link" href="/categories/Tech-Notes/JavaScript-Essence/">JavaScript Essence</a>
+                            </div>
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+    </article>
+
+    <article class="media">
+       
+        <div class="media-content">
+            <div class="content">
+                <time class="has-text-light is-size-7 is-block" datetime="2019-04-19T08:00:00.000Z">2019-04-19</time>
+                <a class="is-link-strong is-size-6 is-single-line" href="/posts/99bdc41f3fe568a2.html">理解 JavaScript 中的事件循环</a>
+                <div class="level article-meta is-mobile">
+                    <div class="level-left">
+                        
+                            <div class="level-item is-size-7 is-uppercase">
+                                <a class="is-link-light is-link" href="/categories/Tech-Notes/">Tech Notes</a> / <a class="is-link-light is-link" href="/categories/Tech-Notes/JavaScript-Essence/">JavaScript Essence</a>
+                            </div>
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+    </article>
+
+    <article class="media">
+       
+        <div class="media-content">
+            <div class="content">
+                <time class="has-text-light is-size-7 is-block" datetime="2019-04-11T08:00:00.000Z">2019-04-11</time>
+                <a class="is-link-strong is-size-6 is-single-line" href="/posts/666b8730271d1bfc.html">JavaScript 实现继承的常用模式</a>
+                <div class="level article-meta is-mobile">
+                    <div class="level-left">
+                        
+                            <div class="level-item is-size-7 is-uppercase">
+                                <a class="is-link-light is-link" href="/categories/Tech-Notes/">Tech Notes</a>
+                            </div>
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+    </article>
+
+    <article class="media">
+       
+        <div class="media-content">
+            <div class="content">
+                <time class="has-text-light is-size-7 is-block" datetime="2019-03-21T08:00:00.000Z">2019-03-21</time>
+                <a class="is-link-strong is-size-6 is-single-line" href="/posts/01da5b9cbaee6b5f.html">理解 JavaScript 中的原型对象</a>
+                <div class="level article-meta is-mobile">
+                    <div class="level-left">
+                        
+                            <div class="level-item is-size-7 is-uppercase">
+                                <a class="is-link-light is-link" href="/categories/Tech-Notes/">Tech Notes</a> / <a class="is-link-light is-link" href="/categories/Tech-Notes/JavaScript-Essence/">JavaScript Essence</a>
+                            </div>
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+    </article>
+
+    <article class="media">
+       
+        <div class="media-content">
+            <div class="content">
+                <time class="has-text-light is-size-7 is-block" datetime="2019-03-19T08:00:00.000Z">2019-03-19</time>
+                <a class="is-link-strong is-size-6 is-single-line" href="/posts/001aa9d7541f3ee9.html">JavaScript 实现函数防抖与函数节流</a>
+                <div class="level article-meta is-mobile">
+                    <div class="level-left">
+                        
+                            <div class="level-item is-size-7 is-uppercase">
+                                <a class="is-link-light is-link" href="/categories/Tech-Notes/">Tech Notes</a>
+                            </div>
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+    </article>
+
+    </div>
+</div>
+        
+            <div class="card">
+    <header class="card-header">
+        <h3 class="card-header-title">标签</h3>
+    </header>
+    <div class="card-content">
+        <div class="menu">
+            <ul class="menu-list">
+                <!-- 
+ * 标签列表
+ * @param {Object} list - a list of tags
+ -->
+
+    
+        <li>
+            <a class="level is-marginless" href="/tags/Interviews/">
+                <span class="level-start">
+                    <span class="level-item">Interviews</span>
+                </span>
+                <span class="level-end">
+                    <span class="level-item tag">0</span>
+                </span>
+            </a>
+        </li>
+    
+        <li>
+            <a class="level is-marginless" href="/tags/JavaScript/">
+                <span class="level-start">
+                    <span class="level-item">JavaScript</span>
+                </span>
+                <span class="level-end">
+                    <span class="level-item tag">6</span>
+                </span>
+            </a>
+        </li>
+    
+        <li>
+            <a class="level is-marginless" href="/tags/Design-Pattern/">
+                <span class="level-start">
+                    <span class="level-item">Design Pattern</span>
+                </span>
+                <span class="level-end">
+                    <span class="level-item tag">1</span>
+                </span>
+            </a>
+        </li>
+    
+        <li>
+            <a class="level is-marginless" href="/tags/WebGL/">
+                <span class="level-start">
+                    <span class="level-item">WebGL</span>
+                </span>
+                <span class="level-end">
+                    <span class="level-item tag">0</span>
+                </span>
+            </a>
+        </li>
+    
+        <li>
+            <a class="level is-marginless" href="/tags/React/">
+                <span class="level-start">
+                    <span class="level-item">React</span>
+                </span>
+                <span class="level-end">
+                    <span class="level-item tag">0</span>
+                </span>
+            </a>
+        </li>
+    
+
+            </ul>
+        </div>
+    </div>
+    <div class="card-footer">
+        
+            <a class="button is-fullwidth is-primary" href="/tags">更多标签</a>
+        
+    </div>
+</div>
+        
+            <div class="card">
+    <header class="card-header">
+        <h3 class="card-header-title">
+            分类
+        </h3>
+    </header>
+    <div class="card-content">
+        <div class="menu">
+            <ul class="menu-list">
+                <!-- 
+ * 分类列表
+ * @param {Object} list - a list of categories
+ -->
+
+    
+        <li>
+            <a class="level is-marginless" href="/categories/Tech-Notes/">
+                <span class="level-start">
+                    <span class="level-item">Tech Notes</span>
+                </span>
+                <span class="level-end">
+                    <span class="level-item tag">6</span>
+                </span>
+            </a>
+            
+        </li>
+    
+
+            </ul>
+        </div>
+    </div>
+    <div class="card-footer">
+        
+            <a class="button is-fullwidth is-primary" href="/categories">详细分类</a>
+        
+    </div>
+</div>
+        
+    </div>
+
+            </div>
+        </div>
+    <!-- Footer -->
+    <footer class="footer">
+    <div class="container">
+        <div class="level">
+            <div class="level-start has-text-centered-mobile">
+                <a class="footer-logo is-block" href="/">
+                    
+                        <img src="/images/I-Know-JS.png" alt="理解 JavaScript 中的原型对象" height="28">
+                    
+                </a>
+                <p class="is-size-7">&copy; 2019 Ricky&#39;s Blog Powered by <a href="http://hexo.io/" target="_blank">Hexo</a> & <a href="https://github.com/Rickkkkkky/hexo-theme-coriander">Coriander</a></p>
+            </div>
+        </div>
+    </div>
+</footer>
+    </section>
+
+
+    <script src="/scripts/main.js"></script>
+
+</body>
+</html>
