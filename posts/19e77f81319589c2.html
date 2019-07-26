@@ -91,7 +91,7 @@
             <div class="level article-meta is-size-7 is-uppercase is-mobile is-overflow-x-auto">
                 <div class="level-left">
                     <!-- Post Date -->
-                    <time class="level-item has-text-light" datetime="2019-06-20T08:00:00.000Z">1 个月前 ( 2019 06.20 )</time>
+                    <time class="level-item has-text-light" datetime="2019-07-22T08:00:00.000Z">4 天前 ( 2019 07.22 )</time>
                     <!-- Categories -->
                     
                         <div class="level-item is-size-7 is-uppercase">
@@ -101,7 +101,7 @@
                     <!-- Read Time -->
                     
                         <span class="level-item has-text-light">
-                            大约 1439 字 ( 阅读时间：10 分钟 )
+                            大约 1671 字 ( 阅读时间：11 分钟 )
                         </span>
                     
                 </div>
@@ -109,7 +109,7 @@
         
         <!-- Article Title -->
         <h1 class="title is-size-3 is-size-4-mobile has-text-weight-normal">
-            <a class="is-link-strong" href="/posts/977c1ee025c5154f.html">理解 JavaScript 中的 Promise</a>
+            <a class="is-link-strong" href="/posts/19e77f81319589c2.html">理解 JavaScript 中的 Promise</a>
         </h1>
         <!-- Tags -->
         
@@ -128,9 +128,7 @@
             <h2 id="promise-规范"><a class="markdownIt-Anchor" href="#promise-规范"></a> Promise 规范</h2>
 <p>Promise 是异步编程的一种解决方案，具体规范可以参考 <a href="https://promisesaplus.com/" target="_blank" rel="noopener">Promise/A+ 规范</a>。ES6 将其写进了语言标准，统一了用法，原生提供了 <code>Promise</code> 类。</p>
 <a id="more"></a>
-<p>本文将主要通过翻译、解读 Promise/A+ 规范来理解 Promise。</p>
 <h3 id="规范术语"><a class="markdownIt-Anchor" href="#规范术语"></a> 规范术语</h3>
-<p>为了方便理解，本文在描述时会直接引用 Promise/A+ 规范中定义的术语。</p>
 <ul>
 <li>&quot;promise&quot; 表示包含了兼容 Promise/A+ 规范的 <code>then()</code> 方法的对象或者函数，通常指一个 <code>Promise</code> 实例。</li>
 <li>&quot;thenable&quot; 表示包含了 <code>then()</code> 方法的对象或者函数。</li>
@@ -138,7 +136,7 @@
 <li>&quot;exception&quot; 表示由 <code>throw</code> 表达式抛出的 &quot;value&quot;。</li>
 <li>&quot;reason&quot; 指一个表示 &quot;promise&quot; 状态变为 rejected 原因的 &quot;value&quot;。</li>
 </ul>
-<h2 id="promise-的含义"><a class="markdownIt-Anchor" href="#promise-的含义"></a> &quot;promise&quot; 的含义</h2>
+<h2 id="规范解读"><a class="markdownIt-Anchor" href="#规范解读"></a> 规范解读</h2>
 <p>一个 &quot;promise&quot; 表示一个操作（通常是异步操作，但也可以是同步操作）的最终结果。</p>
 <h3 id="promise-的状态"><a class="markdownIt-Anchor" href="#promise-的状态"></a> &quot;promise&quot; 的状态</h3>
 <p>一个 &quot;promise&quot; 的状态是只能是 pending（进行中）、fulfilled（已成功）或 rejected（已失败）这三种中的一种。其中 pending 是未完成状态，fulfilled 和 rejected 都是完成状态（可以统称为 settled 或 resolved 状态）。</p>
@@ -152,40 +150,45 @@
 <h3 id="then-方法"><a class="markdownIt-Anchor" href="#then-方法"></a> then() 方法</h3>
 <p><code>then()</code> 方法是与 &quot;promise&quot; 进行交互的最主要途径，用于注册 &quot;promise&quot; 的状态由 pending 变为 fulfilled 或 rejected 的回调函数，并通过回调函数来获取 &quot;promise&quot; 的 &quot;value&quot; 或 &quot;reason&quot;。</p>
 <figure class="highlight javascript hljs"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="hljs-built_in">Promise</span>.prototype.then(onFulfilled, onRejected)</span><br></pre></td></tr></table></figure>
-<p><code>onFulfilled</code> 是可选的参数，如果它的值不是函数则会被忽略。如果 <code>onFulfilled</code> 是一个函数，则它只能在 &quot;promise&quot; 的状态变为 fulfilled 后被调用，传递给 <code>onFulfilled()</code> 的参数是 &quot;promise&quot; 的成功结果。</p>
-<p><code>onRejected</code> 是可选的参数，如果它的值不是函数则会被忽略。如果 <code>onRejected</code> 是一个函数，则它只能在 &quot;promise&quot; 的状态变为 rejected 后被调用，传递给 <code>onRejected()</code> 的参数是 &quot;promise&quot; 的失败原因。</p>
+<ul>
+<li><code>onFulfilled</code> 是可选的参数，如果它的值不是函数则会被忽略。如果 <code>onFulfilled</code> 是一个函数，则它只能在 &quot;promise&quot; 的状态变为 fulfilled 后被调用，传递给 <code>onFulfilled()</code> 的参数是 &quot;promise&quot; 的成功结果。</li>
+<li><code>onRejected</code> 是可选的参数，如果它的值不是函数则会被忽略。如果 <code>onRejected</code> 是一个函数，则它只能在 &quot;promise&quot; 的状态变为 rejected 后被调用，传递给 <code>onRejected()</code> 的参数是 &quot;promise&quot; 的失败原因。</li>
+</ul>
 <p>一个 &quot;promise&quot; 可以多次调用 <code>then()</code> 方法，当 &quot;promise&quot; 的状态转换为 fulfilled 或 rejected 后，所有的 <code>onFulfilled()</code> 或 <code>onRejected()</code> 会按照其注册顺序依次调用。</p>
-<p><code>then()</code> 方法会返回一个 &quot;promise&quot;。</p>
+<p><code>then()</code> 方法的返回值是一个新的 &quot;promise&quot;。</p>
 <figure class="highlight javascript hljs"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">promise2 = promise1.then(onFulfilled, onRejected)</span><br></pre></td></tr></table></figure>
 <p>不论 <code>promise1</code> 的状态最终变为了什么，假设这个状态对应的参数（<code>onFulfilled</code> 或 <code>onRejected</code>）为 <code>callback</code>，则：</p>
 <ul>
-<li>如果 <code>callback</code> 是函数并且返回一个值，假设返回值为 <code>x</code>，调用 <code>[[Resolve]](promise2, x)</code> 来判断 <code>promise2</code> 的最终状态和结果；</li>
-<li>如果 <code>callback</code> 是函数并且抛出一个异常 <code>e</code>，<code>promise2</code> 的状态将变为 rejected，它的失败原因为 <code>e</code>；</li>
 <li>如果 <code>callback</code> 不是函数，则 <code>promise2</code> 的最终状态和最终结果与 <code>promise1</code> 相同。</li>
+<li>如果 <code>callback</code> 是函数并且抛出一个异常 <code>e</code>，<code>promise2</code> 的状态将变为 rejected，它的失败原因为 <code>e</code>；</li>
+<li>如果 <code>callback</code> 是函数并且返回一个值 <code>x</code>，调用 <code>[[Resolve]](promise2, x)</code> 来判断 <code>promise2</code> 的最终状态和结果；</li>
 </ul>
 <p>这里的 <code>[[Resolve]](promise, x)</code> 是规范中定义的一个抽象的操作，在规范中称之为 &quot;Promise Resolution Procedure&quot;。</p>
 <h3 id="promise-resolution-procedure"><a class="markdownIt-Anchor" href="#promise-resolution-procedure"></a> Promise Resolution Procedure</h3>
-<p>&quot;Promise Resolution Procedure&quot; 用 <code>[[Resolve]](promise, x)</code> 表示，它接受一个 &quot;promise&quot; 和一个 &quot;value&quot; 作为输入参数。如果 <code>x</code> 是一个 &quot;thenable&quot;，那么会尝试让 <code>promise</code> 与 <code>x</code> 的状态保持一致；否则 <code>promise</code> 的状态变为 fulfilled，它的成功结果为 <code>x</code> 的值。</p>
-<p>这里的 &quot;promise&quot; 指的是前文中引用的规范中的术语，而 <code>promise</code> 指的是传入 <code>[[Resolve]](promise, x)</code> 中的参数。</p>
-<p><code>[[Resolve]](promise, x)</code> 的大致执行逻辑为：</p>
-<ol>
-<li>如果 <code>x</code> 不是 <code>thenable</code>，以 <code>x</code> 作为成功结果将 <code>promise</code> 的状态变为 fulfilled；</li>
-<li>如果 <code>x</code> 是 <code>thenable</code>，则：
-<ol>
-<li>如果 <code>promise</code> 与 <code>x</code> 引用的是同一个对象，以一个 <code>TypeError</code> 作为失败原因将 <code>promise</code> 的状态变为 rejected；</li>
-<li>如果 <code>x</code> 是一个 &quot;promise&quot;，则 <code>promise</code> 的状态和最终结果与 <code>x</code> 保持一致；</li>
+<p>&quot;Promise Resolution Procedure&quot; 用 <code>[[Resolve]](promise, x)</code> 表示，通过对 <code>x</code> 的值进行一系列的判断来决定 <code>promise</code> 的最终状态与最终结果。它接受一个 &quot;promise&quot; 和一个 &quot;value&quot; 作为输入参数。如果 <code>x</code> 是一个 &quot;thenable&quot;，那么会尝试让 <code>promise</code> 与 <code>x</code> 的状态保持一致；否则 <code>promise</code> 的状态变为 fulfilled，它的成功结果为 <code>x</code> 的值。</p>
+<p>注意，这里的 &quot;promise&quot; 指的是前文中引用的规范中的术语，而 <code>promise</code> 指的是传入 <code>[[Resolve]](promise, x)</code> 中的参数。</p>
+<ul>
 <li>如果获取 <code>x.then</code> 的值时抛出错误 <code>e</code>，则以 <code>e</code> 作为失败原因将 <code>promise</code> 的状态变为 rejected；</li>
-<li>如果 <code>x.then</code> 是一个函数，则执行 <code>x.then(resolvePromise, rejectPromise)</code>：
-<ol>
+<li>如果 <code>x</code> 不是 &quot;thenable&quot;，则以 <code>x</code> 作为成功结果将 <code>promise</code> 的状态变为 fulfilled；</li>
+<li>如果 <code>x</code> 是 &quot;promise&quot;，则：
+<ul>
+<li>如果 <code>promise</code> 与 <code>x</code> 引用的是同一个对象，以一个 <code>TypeError</code> 作为失败原因将 <code>promise</code> 的状态变为 rejected；</li>
+<li>否则 <code>promise</code> 的状态和最终结果与 <code>x</code> 保持一致；</li>
+</ul>
+</li>
+<li>如果 <code>x</code> 是 &quot;thenable&quot;，则执行 <code>x.then(resolvePromise, rejectPromise)</code>：
+<ul>
 <li>如果 <code>resolvePromise</code> 被调用，假设传入的参数为 <code>y</code>，则执行 <code>[[Resolve]](promise, y)</code>；</li>
 <li>如果 <code>rejectPromise</code> 被调用，假设传入的参数为 <code>r</code>，则以 <code>r</code> 为失败原因将 <code>promise</code> 的状态变为 rejected；</li>
 <li>无论 <code>resolvePromise</code> 和 <code>rejectPromise</code> 被调用多少次，只以第一次调用为准，后续的调用会被忽略；</li>
 <li>如果执行 <code>x.then()</code> 的过程中抛出异常 <code>e</code>，若此时 <code>resolvePromise</code> 或 <code>rejectPromise</code> 已经被调用，则忽略该异常；否则以 <code>e</code> 为失败原因将 <code>promise</code> 的状态变为 rejected。</li>
-</ol>
+</ul>
 </li>
-</ol>
-</li>
-</ol>
+</ul>
+<p>如果一个循环的 &quot;thenable&quot; 链导致 <code>[[Resolve]](promise, x)</code> 过程进入无限的递归过程，Promise/A+ 规范建议它的实现版本以一个 <code>TypeError</code> 作为失败原因将 <code>promise</code> 的状态变为 rejected。</p>
+<p>但是，Promise/A+ 规范的实现不能对于 &quot;thenable&quot; 链的深度进行限制。如果 <code>[[Resolve]](promise, x)</code> 过程遇到由不同的 &quot;thenable&quot; 组成的无限的 &quot;thenable&quot; 链，正确的做法是进行无限的递归。</p>
+<h2 id="微任务与宏任务"><a class="markdownIt-Anchor" href="#微任务与宏任务"></a> 微任务与宏任务</h2>
+<p>Promise/A+ 规范中规定 &quot;promise&quot; 的 <code>then()</code> 方法的回调函数应该异步执行，且应在 <code>then()</code> 方法被调用的那一轮事件循环之后的新调用栈中执行。但规范并没有限制应该借助宏任务（macro-task）机制还是微任务（micro-task）机制实现。或者，Promise 作为平台（例如 JavaScirpt 引擎等）内部的一部分实现时，它本身可以包含一个任务调度队列机制来调用回调函数。</p>
 
         </div>
         <!-- Read More -->
@@ -321,22 +324,22 @@
                                 </span>
                                 <span class="level-end">
                                     <span class="level-item tag">
-                                        2
+                                        1
                                     </span>
                                 </span>
                             </a>
                         </li>
                     
                         <li>
-                            <a class="level is-marginless" href="/archives/2019/06">
+                            <a class="level is-marginless" href="/archives/2019/07">
                                 <span class="level-start">
                                     <span class="level-item">
-                                        六月 - 2019
+                                        七月 - 2019
                                     </span>
                                 </span>
                                 <span class="level-end">
                                     <span class="level-item tag">
-                                        1
+                                        2
                                     </span>
                                 </span>
                             </a>
@@ -375,8 +378,8 @@
        
         <div class="media-content">
             <div class="content">
-                <time class="has-text-light is-size-7 is-block" datetime="2019-06-20T08:00:00.000Z">2019-06-20</time>
-                <a class="is-link-strong is-size-6 is-single-line" href="/posts/977c1ee025c5154f.html">理解 JavaScript 中的 Promise</a>
+                <time class="has-text-light is-size-7 is-block" datetime="2019-07-25T08:00:00.000Z">2019-07-25</time>
+                <a class="is-link-strong is-size-6 is-single-line" href="/posts/99bdc41f3fe568a2.html">浅析浏览器中的事件循环</a>
                 <div class="level article-meta is-mobile">
                     <div class="level-left">
                         
@@ -394,8 +397,8 @@
        
         <div class="media-content">
             <div class="content">
-                <time class="has-text-light is-size-7 is-block" datetime="2019-04-19T08:00:00.000Z">2019-04-19</time>
-                <a class="is-link-strong is-size-6 is-single-line" href="/posts/99bdc41f3fe568a2.html">理解 JavaScript 中的事件循环</a>
+                <time class="has-text-light is-size-7 is-block" datetime="2019-07-22T08:00:00.000Z">2019-07-22</time>
+                <a class="is-link-strong is-size-6 is-single-line" href="/posts/19e77f81319589c2.html">理解 JavaScript 中的 Promise</a>
                 <div class="level article-meta is-mobile">
                     <div class="level-left">
                         
@@ -483,17 +486,6 @@
 
     
         <li>
-            <a class="level is-marginless" href="/tags/Interviews/">
-                <span class="level-start">
-                    <span class="level-item">Interviews</span>
-                </span>
-                <span class="level-end">
-                    <span class="level-item tag">0</span>
-                </span>
-            </a>
-        </li>
-    
-        <li>
             <a class="level is-marginless" href="/tags/JavaScript/">
                 <span class="level-start">
                     <span class="level-item">JavaScript</span>
@@ -511,28 +503,6 @@
                 </span>
                 <span class="level-end">
                     <span class="level-item tag">1</span>
-                </span>
-            </a>
-        </li>
-    
-        <li>
-            <a class="level is-marginless" href="/tags/WebGL/">
-                <span class="level-start">
-                    <span class="level-item">WebGL</span>
-                </span>
-                <span class="level-end">
-                    <span class="level-item tag">0</span>
-                </span>
-            </a>
-        </li>
-    
-        <li>
-            <a class="level is-marginless" href="/tags/React/">
-                <span class="level-start">
-                    <span class="level-item">React</span>
-                </span>
-                <span class="level-end">
-                    <span class="level-item tag">0</span>
                 </span>
             </a>
         </li>

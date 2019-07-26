@@ -5,7 +5,7 @@
  * <head> 标签
  -->
 <meta charset="utf-8">
-<title>理解 JavaScript 中的事件循环 - Ricky&#39;s Blog</title>
+<title>浅析浏览器中的事件循环 - Ricky&#39;s Blog</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
 <!-- Favicon -->
@@ -41,7 +41,7 @@
             <!-- Logo -->
             <a class="navbar-item navbar-logo" href="/">
                 
-                    <img src="/images/I-Know-JS.png" alt="理解 JavaScript 中的事件循环">
+                    <img src="/images/I-Know-JS.png" alt="浅析浏览器中的事件循环">
                 
             </a>
             <!-- Nav Menu Button -->
@@ -91,7 +91,7 @@
             <div class="level article-meta is-size-7 is-uppercase is-mobile is-overflow-x-auto">
                 <div class="level-left">
                     <!-- Post Date -->
-                    <time class="level-item has-text-light" datetime="2019-04-19T08:00:00.000Z">3 个月前 ( 2019 04.19 )</time>
+                    <time class="level-item has-text-light" datetime="2019-07-25T08:00:00.000Z">18 小时前 ( 2019 07.25 )</time>
                     <!-- Categories -->
                     
                         <div class="level-item is-size-7 is-uppercase">
@@ -101,7 +101,7 @@
                     <!-- Read Time -->
                     
                         <span class="level-item has-text-light">
-                            大约 2055 字 ( 阅读时间：14 分钟 )
+                            大约 3411 字 ( 阅读时间：23 分钟 )
                         </span>
                     
                 </div>
@@ -109,7 +109,7 @@
         
         <!-- Article Title -->
         <h1 class="title is-size-3 is-size-4-mobile has-text-weight-normal">
-            <a class="is-link-strong" href="/posts/99bdc41f3fe568a2.html">理解 JavaScript 中的事件循环</a>
+            <a class="is-link-strong" href="/posts/99bdc41f3fe568a2.html">浅析浏览器中的事件循环</a>
         </h1>
         <!-- Tags -->
         
@@ -127,76 +127,99 @@
         <div class="content">
             <h2 id="主线程与工作线程"><a class="markdownIt-Anchor" href="#主线程与工作线程"></a> 主线程与工作线程</h2>
 <p>JavaScript 的一个核心特征就是单线程。当我们说 &quot;JavaScript 是单线程语言&quot; 时，我们实际上想表达的意思是 &quot;JavaScript 引擎中负责解释和执行 JavaScript 代码的线程只有一个&quot;。我们将这个线程称为主线程。</p>
-<p>由于 JavaScript 是单线程的，主线程在同一时刻只能执行一个任务。对于一些耗时较长的任务（如 I/O 操作），如果将其放在主线程中运行，势必会造成主线程阻塞。因此这些较为耗时的操作不能放在主线程上执行，需要其他线程帮助主线程处理这些任务，例如处理 Ajax 请求的线程、定时器线程、处理 DOM 事件的线程、（Node.js中）文件读写的线程等。我们将这些线程统一称为工作线程。</p>
+<p>由于 JavaScript 是单线程的，主线程在同一时刻只能执行一个任务。对于一些耗时较长的任务（例如 HTTP 请求等），如果将其放在主线程中运行，势必会造成主线程阻塞。因此这些较为耗时的操作不能放在主线程上执行，需要其他线程帮助主线程处理这些任务，例如处理 AJAX 请求的线程、定时器线程等。我们将这些线程统一称为工作线程。</p>
 <a id="more"></a>
+<p>这些工作线程本身并不是由 JavaScript 引擎提供的，而是由运行环境（浏览器）提供的。实际上，在 <a href="https://tc39.es/ecma262/" target="_blank" rel="noopener">ECMA-262 规范</a>中并没有与事件循环相关的定义与描述。本文所描述的事件循环机制主要参考 <a href="https://html.spec.whatwg.org/#event-loops" target="_blank" rel="noopener">HTML 规范</a>。</p>
 <h2 id="异步过程"><a class="markdownIt-Anchor" href="#异步过程"></a> 异步过程</h2>
-<p>异步的意义在于：工作线程执行任务时，主线程同时也可以继续执行其他任务。</p>
+<p>异步的意义在于：工作线程执行任务时，主线程同时也可以继续执行其他任务。这样主线程就不会被耗时较长的操作阻塞。</p>
 <p>我们可以将异步过程大致归纳为：</p>
 <ol>
 <li>主线程发起异步任务请求；</li>
-<li>相应的工作线程接收异步任务请求，并通知主线程；</li>
+<li>相应的工作线程接收异步任务请求；</li>
 <li>工作线程执行相应的任务，同时主线程继续执行其他任务；</li>
 <li>工作线程完成任务后通知主线程；</li>
-<li>主线程执行异步任务的回调。</li>
+<li>主线程收到通知后执行异步任务的回调。</li>
 </ol>
 <p>举个例子：</p>
 <figure class="highlight javascript hljs"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="hljs-built_in">console</span>.log(<span class="hljs-string">'script start'</span>)</span><br><span class="line"></span><br><span class="line">setTimeout(<span class="hljs-function"><span class="hljs-params">()</span> =&gt;</span> &#123;</span><br><span class="line">  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">'timeout'</span>)</span><br><span class="line">&#125;, <span class="hljs-number">1000</span>)</span><br><span class="line"></span><br><span class="line"><span class="hljs-built_in">console</span>.log(<span class="hljs-string">'script end'</span>)</span><br></pre></td></tr></table></figure>
-<p>上面这段代码在控制台的输出为：</p>
+<p>上面这段代码在 Chrome 的控制台中运行后的输出结果为：</p>
 <figure class="highlight plaintext hljs"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">script start</span><br><span class="line">script end</span><br><span class="line">timeout</span><br></pre></td></tr></table></figure>
 <p>控制台首先输出了 <code>script start</code> 和 <code>script end</code>，之后经过了大概 1 秒的时间后输出了 <code>timeout</code>。</p>
 <p>当主线程调用 <code>setTimeout()</code> 时，会向定时器的工作线程发送异步任务请求，而后继续执行之后的任务。因此控制台中 <code>script end</code> 会在 <code>timeout</code> 之前被输出。</p>
 <p>再举个例子：</p>
 <figure class="highlight javascript hljs"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="hljs-built_in">console</span>.log(<span class="hljs-string">'script start'</span>)</span><br><span class="line"></span><br><span class="line">setTimeout(<span class="hljs-function"><span class="hljs-params">()</span> =&gt;</span> &#123;</span><br><span class="line">  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">'timeout'</span>)</span><br><span class="line">&#125;, <span class="hljs-number">1000</span>)</span><br><span class="line"></span><br><span class="line"><span class="hljs-keyword">const</span> startTime = <span class="hljs-keyword">new</span> <span class="hljs-built_in">Date</span>().getTime()</span><br><span class="line"><span class="hljs-keyword">while</span> (<span class="hljs-keyword">new</span> <span class="hljs-built_in">Date</span>().getTime() - startTime &lt;= <span class="hljs-number">10000</span>) &#123;&#125;</span><br><span class="line"></span><br><span class="line"><span class="hljs-built_in">console</span>.log(<span class="hljs-string">'script end'</span>)</span><br></pre></td></tr></table></figure>
-<p>这个例子与之前的例子很相似。不同之处在于，调用 <code>setTimeout()</code> 并设置一个延迟 1 秒执行的异步任务之后，我们通过一个 <code>while</code> 循环判断时间是否经过了 10 秒。观察控制台的输出:</p>
+<p>这个例子与之前的例子很相似。不同之处在于，调用 <code>setTimeout()</code> 并设置一个延迟 1 秒执行的异步任务之后，我们通过一个 <code>while</code> 循环判断时间是否经过了 10 秒。这个例子在 Chrome 的控制台中运行后的输出结果为：</p>
 <figure class="highlight plaintext hljs"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">script start</span><br><span class="line">script end</span><br><span class="line">timeout</span><br></pre></td></tr></table></figure>
 <p>控制台首先输出了 <code>script start</code>，之后经过了大概 10 秒的时间后输出了 <code>script end</code> 和 <code>timeout</code>。</p>
-<p>这个结果有趣的点在于，虽然 <code>setTimeout()</code> 设置的延迟时间只有 1 秒，但实际上它的回调函数执行的时间却延迟了大约 10 秒。所以问题的关键点在于，异步过程中工作线程与主线程是通过怎么样的机制进行沟通的？</p>
-<h2 id="调用栈-任务队列与事件循环"><a class="markdownIt-Anchor" href="#调用栈-任务队列与事件循环"></a> 调用栈、任务队列与事件循环</h2>
-<p>JavaScript 运行时维护了一个调用栈（Call Stack）与任务队列（Task Queue）。</p>
-<p>调用栈是 JavaScript 追踪函数执行流的一种机制。</p>
+<p>这个结果有趣的点在于，虽然 <code>setTimeout()</code> 设置的延迟时间只有 1 秒，但实际上它的回调函数执行的时间却延迟了大约 10 秒，并且 <code>script end</code> 仍然是在 <code>timeout</code> 之前被输出的。所以问题的关键点在于，异步过程中工作线程与主线程是通过怎么样的机制进行沟通的？</p>
+<h2 id="事件循环"><a class="markdownIt-Anchor" href="#事件循环"></a> 事件循环</h2>
+<p>浏览器中的事件循环（event loop）是用于协调事件、用户交互、脚本、UI 渲染、网络等的机制。</p>
+<h3 id="调用栈"><a class="markdownIt-Anchor" href="#调用栈"></a> 调用栈</h3>
+<p>JavaScript 运行时维护了一个调用栈（call stack）。调用栈是 JavaScript 追踪函数执行流的一种机制。</p>
 <ul>
-<li>每调用一个函数，解释器就会把该函数添加进调用栈并开始执行。</li>
-<li>如果正在调用栈中执行的函数还调用了其他函数，那么新函数也将会被添加进调用栈，并开始执行。</li>
-<li>当前函数执行完毕后，会将该函数从调用栈中移除，并继续执行当前执行环境中剩下的代码。</li>
+<li>每调用一个函数，就会把该函数添加进调用栈并开始执行；</li>
+<li>如果正在调用栈中执行的函数还调用了其他函数，那么新函数也将会被添加进调用栈，并开始执行；</li>
+<li>当前函数执行完毕后，会将该函数从调用栈中移除，并继续执行当前执行环境中剩下的代码，直到调用栈清空。</li>
 </ul>
-<p>任务队列则是工作线程在异步任务完成之后通知主线程的通知机制。当工作线程完成异步任务后，相应的任务会被添加到任务队列中。</p>
-<p>主线程执行任务队列中的任务是一个循环的过程，称为事件循环。当调用栈为空时，任务队列中最先进入队列的任务会被移出队列，并传递给主线程，回调函数进入调用栈开始执行。</p>
-<p><a href="https://raw.githubusercontent.com/Rickkkkkky/blog-gallery/master/event-loop.png" target="_blank" rel="noopener"><img src="https://raw.githubusercontent.com/Rickkkkkky/blog-gallery/master/event-loop.png" alt="event-loop.png"></a></p>
-<h2 id="gui-渲染线程"><a class="markdownIt-Anchor" href="#gui-渲染线程"></a> GUI 渲染线程</h2>
-<p>浏览器内核中包含了一个 GUI 渲染线程，它负责渲染图形用户界面。</p>
-<p>值得注意的是，浏览器的 GUI 渲染线程与执行 JavaScript 代码的主线程是互斥的，当主线程执行 JavaScript 时 GUI 线程会被挂起，GUI 更新会被保存在一个队列中。GUI 渲染线程会在 JavaScript 主线程的事件循环的间隔中执行 GUI 的更新。</p>
-<p>举个例子：</p>
-<figure class="highlight javascript hljs"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="hljs-built_in">document</span>.body.style[<span class="hljs-string">'background-color'</span>] = <span class="hljs-string">'#000'</span></span><br><span class="line"></span><br><span class="line"><span class="hljs-keyword">const</span> startTime = <span class="hljs-keyword">new</span> <span class="hljs-built_in">Date</span>().getTime()</span><br><span class="line"><span class="hljs-keyword">while</span> (<span class="hljs-keyword">new</span> <span class="hljs-built_in">Date</span>().getTime() - startTime &lt;= <span class="hljs-number">10000</span>) &#123;&#125;</span><br><span class="line"></span><br><span class="line"><span class="hljs-built_in">document</span>.body.style[<span class="hljs-string">'background-color'</span>] = <span class="hljs-string">'#fff'</span></span><br></pre></td></tr></table></figure>
-<p>在浏览器中运行上面的例子，我们会发现页面的背景色并没有像我们预期的一样首先变为黑色，经过 10 秒后再变为白色。产生这样的结果的原因在于，两次修改页面背景色的操作实际上是在一次事件循环中执行的，这个过程中 GUI 渲染线程并不会立即执行 GUI 的更新。</p>
-<p>修改上面的例子：</p>
-<figure class="highlight javascript hljs"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="hljs-built_in">document</span>.body.style[<span class="hljs-string">'background-color'</span>] = <span class="hljs-string">'#000'</span></span><br><span class="line"></span><br><span class="line">setTimeout(<span class="hljs-function"><span class="hljs-params">()</span> =&gt;</span> &#123;</span><br><span class="line">  <span class="hljs-built_in">document</span>.body.style[<span class="hljs-string">'background-color'</span>] = <span class="hljs-string">'#fff'</span></span><br><span class="line">&#125;, <span class="hljs-number">10000</span>)</span><br></pre></td></tr></table></figure>
-<p>这个例子中，我们将两次修改页面背景色的操作放在两次事件循环中执行，页面的背景色首先变为黑色，在经过大约 10 秒之后变为了白色。当修改页面背景色为黑色并且当前调用栈执行完毕后，GUI 渲染线程执行 GUI 更新。定时器线程在 10 秒的延迟后向任务队列推送任务。主线程获取到任务以后开始新一轮的事件循环，将页面的背景色设为白色，而后本轮事件循环结束，GUI 渲染线程再次执行 GUI 更新。</p>
-<h2 id="web-worker"><a class="markdownIt-Anchor" href="#web-worker"></a> Web Worker</h2>
-<p>由于 JavaScript 单线程的机制，当调用栈中执行的代码需要消耗较长的时间时，任务队列中的任务就必须等待，直到这些较为耗时的操作执行完毕后才能被处理；并且，GUI 渲染也会被阻塞，GUI 会长时间得不到更新。</p>
-<p>为了解决上面提出的问题，浏览器提供了 Web Worker API，可以将较为耗时的操作分配到其他线程中。当创建一个 Worker 实例时，JavaScript 引擎就会向浏览器申请一个子线程，我们将其称为 Web Worker 线程。Web Worker 线程具有独立的运行时，主线程与 Web Worker 线程之间通过 <code>postMessage()</code> 向对方推送消息。</p>
-<p><a href="https://raw.githubusercontent.com/Rickkkkkky/blog-gallery/master/web-worker-event-loop.png" target="_blank" rel="noopener"><img src="https://raw.githubusercontent.com/Rickkkkkky/blog-gallery/master/web-worker-event-loop.png" alt="web-worker-event-loop"></a></p>
-<h2 id="微任务"><a class="markdownIt-Anchor" href="#微任务"></a> 微任务</h2>
-<p>举个例子：</p>
-<figure class="highlight javascript hljs"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="hljs-built_in">console</span>.log(<span class="hljs-string">'script start'</span>)</span><br><span class="line"></span><br><span class="line">setTimeout(<span class="hljs-function"><span class="hljs-params">()</span> =&gt;</span> &#123;</span><br><span class="line">  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">'timeout'</span>)</span><br><span class="line">&#125;, <span class="hljs-number">100</span>)</span><br><span class="line"></span><br><span class="line"><span class="hljs-keyword">const</span> startTime = <span class="hljs-keyword">new</span> <span class="hljs-built_in">Date</span>().getTime()</span><br><span class="line"><span class="hljs-keyword">while</span> (<span class="hljs-keyword">new</span> <span class="hljs-built_in">Date</span>().getTime() - startTime &lt;= <span class="hljs-number">10000</span>) &#123;&#125;</span><br><span class="line"></span><br><span class="line"><span class="hljs-built_in">Promise</span>.resolve().then(<span class="hljs-function"><span class="hljs-params">()</span> =&gt;</span> &#123;</span><br><span class="line">  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">'first promise'</span>)</span><br><span class="line">&#125;).then(<span class="hljs-function"><span class="hljs-params">()</span> =&gt;</span> &#123;</span><br><span class="line">  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">'second promise'</span>)</span><br><span class="line">&#125;)</span><br><span class="line"></span><br><span class="line"><span class="hljs-built_in">console</span>.log(<span class="hljs-string">'script end'</span>)</span><br></pre></td></tr></table></figure>
-<p>上面的例子中，正确的输出顺序是：</p>
-<figure class="highlight plaintext hljs"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">script start</span><br><span class="line">script end</span><br><span class="line">first promise</span><br><span class="line">second promise</span><br><span class="line">timeout</span><br></pre></td></tr></table></figure>
-<p>为什么 <code>timeout</code> 会在最后被输出呢？</p>
-<p>事实上，在 JavaScript 的运行机制中，除了任务队列以外，还存在一个微任务（microtask）队列。微任务队列与任务队列的不同之处在于，在调用栈为空时，主线程会优先从微任务队列中获取待执行的任务，只有当调用栈和微任务队列都为空时，主线程才会执行任务队列中的任务。</p>
-<p><a href="https://raw.githubusercontent.com/Rickkkkkky/blog-gallery/master/microtask-event-loop.png" target="_blank" rel="noopener"><img src="https://raw.githubusercontent.com/Rickkkkkky/blog-gallery/master/microtask-event-loop.png" alt="microtask-event-loop"></a></p>
+<h3 id="任务队列"><a class="markdownIt-Anchor" href="#任务队列"></a> 任务队列</h3>
+<p>任务队列（task queue）是工作线程通知主线程的机制。一个事件循环可能有多个任务队列。</p>
+<p>在 HTML 文档中，任务队列实际上并不是队列（queue）数据结构，而是任务的有序集合（ordered set）。事件循环在所有任务队列中选择待执行的任务时，会先选择一个包含可执行任务（runnable task）的任务队列，而后从这个任务队列中选择第一个可执行的任务，而不是直接选择任务队列中的第一个任务。通常情况下，进入任务队列中的任务都是可执行的，因此可以简单地将任务队列视为一个队列。</p>
+<p>由于一个事件循环有多个任务队列，不同任务队列中的任务来自不同的任务源（task source），事件循环会调度所有任务队列，在保证用户界面持续响应的同时兼顾来自所有任务源中的任务。每个任务都来自一个任务源，任务源用于区分不同类型的任务。一个事件循环中，任务源都和任务队列之间是一对多的关系。这意味着来自同一个任务源的任务会被添加到同一个任务队列中，但一个任务队列中的任务可能来自多个任务源。</p>
+<p>常见的任务源包括：</p>
+<ul>
+<li>DOM 操作（DOM manipulation task source）；</li>
+<li>用户交互（user interaction task source）；</li>
+<li>网络活动（networking task source）；</li>
+<li>定时器（history traversal task source）；</li>
+<li>…</li>
+</ul>
+<p>简单地说，在异步过程中，当工作线程通知主线程时，如果注册了对应事件的监听函数或者异步任务完成的回调函数，就会创建一个新的任务用于执行相应的函数进入对应的任务队列中。</p>
+<h3 id="微任务队列"><a class="markdownIt-Anchor" href="#微任务队列"></a> 微任务队列</h3>
+<p>微任务源（microtask task source）是一个特殊的任务源，所有来自微任务源的任务都被称为微任务（microtask）。</p>
+<p>微任务创建以后会被添加到微任务队列（microtask queue）中。一个事件循环只有一个微任务队列。微任务队列是一个存储微任务的队列，而不是像任务队列一样是一个有序集合，因此微任务队列中的微任务是严格按照先进先出的顺序执行的。</p>
 <p>微任务产生的途径包括：</p>
 <ul>
-<li><code>Promise</code></li>
-<li><code>MutationObserver</code></li>
+<li><code>Promise.then()</code>（ES6 API）</li>
+<li><code>MutationObserver</code>（HTML5 特性）</li>
 <li><code>Object.observe</code>（已废弃）</li>
-<li><code>process.nextTick()</code>（Node.js API）</li>
 </ul>
-<p>当某次事件循环中产生了微任务，微任务会被添加到微任务队列中。当调用栈为空时，微任务队列中的微任务按顺序被执行。当调用栈和微任务队列都为空时，本次事件循环结束，GUI 渲染线程渲染用户图形界面，而后开始下一轮事件循环。</p>
+<p>在一些文档（包括 <a href="https://promisesaplus.com/" target="_blank" rel="noopener">Promise/A+ 规范</a>）中为了便于区分，将任务队列中的任务称为宏任务（macrotask）。</p>
+<h3 id="事件循环过程"><a class="markdownIt-Anchor" href="#事件循环过程"></a> 事件循环过程</h3>
+<p>当调用栈为空时，就会通过事件循环来获取需要执行的任务（task）。事件循环会首先检查微任务队列中是否有微任务，如果有，选择微任务队列中最先入队的微任务；如果没有，则从任务队列中选取宏任务。当事件循环选中待执行的任务后，该任务需要执行的函数以及相应的执行上下文环境会被推送到堆栈中进行执行与调用。</p>
+<p><a href="https://raw.githubusercontent.com/Rickkky/blog-gallery/master/window-event-loop.png" target="_blank" rel="noopener"><img src="https://raw.githubusercontent.com/Rickkky/blog-gallery/master/window-event-loop.png" alt="window-event-loop.png"></a></p>
+<p>举个例子：</p>
+<figure class="highlight javascript hljs"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="hljs-built_in">console</span>.log(<span class="hljs-string">'script start'</span>)</span><br><span class="line"></span><br><span class="line">setTimeout(<span class="hljs-function"><span class="hljs-params">()</span> =&gt;</span> &#123;</span><br><span class="line">  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">'timeout'</span>)</span><br><span class="line">&#125;, <span class="hljs-number">100</span>)</span><br><span class="line"></span><br><span class="line"><span class="hljs-keyword">let</span> startTime = <span class="hljs-keyword">new</span> <span class="hljs-built_in">Date</span>().getTime()</span><br><span class="line"><span class="hljs-keyword">while</span> (<span class="hljs-keyword">new</span> <span class="hljs-built_in">Date</span>().getTime() - startTime &lt;= <span class="hljs-number">1000</span>) &#123;&#125;</span><br><span class="line"></span><br><span class="line"><span class="hljs-built_in">Promise</span>.resolve().then(<span class="hljs-function"><span class="hljs-params">()</span> =&gt;</span> &#123;</span><br><span class="line">  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">'first promise'</span>)</span><br><span class="line">&#125;).then(<span class="hljs-function"><span class="hljs-params">()</span> =&gt;</span> &#123;</span><br><span class="line">  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">'second promise'</span>)</span><br><span class="line">&#125;)</span><br><span class="line"></span><br><span class="line">startTime = <span class="hljs-keyword">new</span> <span class="hljs-built_in">Date</span>().getTime()</span><br><span class="line"><span class="hljs-keyword">while</span> (<span class="hljs-keyword">new</span> <span class="hljs-built_in">Date</span>().getTime() - startTime &lt;= <span class="hljs-number">1000</span>) &#123;&#125;</span><br><span class="line"></span><br><span class="line"><span class="hljs-built_in">console</span>.log(<span class="hljs-string">'script end'</span>)</span><br></pre></td></tr></table></figure>
+<p>这个例子首先在控制台输出 <code>script start</code>，并设置了一个 100 毫秒的定时器。然后通过 <code>while</code> 循环将主线程阻塞约 1 秒的时间。这个过程中定时器的回调函数并没有执行，因为计时结束后设定的回调操作被保存在了一个宏任务中，宏任务被添加到任务队列中，并不会立即执行。而后创建了一个状态为 fulfilled 的 <code>Promise</code> 实例，通过 <code>then()</code> 方法为其添加 <code>onFulfilled</code> 回调。回调操作被保存在了一个微任务中，微任务被添加到微任务队列中。由于 <code>then()</code> 方法返回了一个 fulfilled 状态的实例，通过同样的方法创建了第二个微任务。最后再次阻塞主线程约 1 秒后，控制台输出 <code>script end</code>。此时调用栈已空，微任务会先按顺序执行，而后再执行任务队列中的宏任务。因此，上面的例子在 Chrome 浏览器中运行，会首先输出 <code>script start</code>，经过大约 2 秒后按顺序输出 <code>script end</code>、<code>first promise</code>、<code>second promise</code>、<code>script end</code>。</p>
+<h3 id="gui-渲染线程"><a class="markdownIt-Anchor" href="#gui-渲染线程"></a> GUI 渲染线程</h3>
+<p>浏览器内核中包含了一个 GUI 渲染线程，它负责渲染图形用户界面（Graphical User Interface， GUI）。</p>
+<p>浏览器的 GUI 渲染线程与执行 JavaScript 代码的主线程是互斥的，当主线程执行 JavaScript 时 GUI 线程会被挂起。在浏览器的事件循环过程中，当检查到微任务队列为空时，会触发更新渲染过程，此时如果 GUI 需要更新，则由 GUI 渲染线程进行更新。</p>
+<figure class="highlight javascript hljs"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="hljs-built_in">document</span>.body.style[<span class="hljs-string">'background-color'</span>] = <span class="hljs-string">'red'</span></span><br><span class="line"></span><br><span class="line"><span class="hljs-keyword">const</span> startTime = <span class="hljs-keyword">new</span> <span class="hljs-built_in">Date</span>().getTime()</span><br><span class="line"><span class="hljs-keyword">while</span> (<span class="hljs-keyword">new</span> <span class="hljs-built_in">Date</span>().getTime() - startTime &lt;= <span class="hljs-number">1000</span>) &#123;&#125;</span><br><span class="line"></span><br><span class="line"><span class="hljs-built_in">document</span>.body.style[<span class="hljs-string">'background-color'</span>] = <span class="hljs-string">'green'</span></span><br></pre></td></tr></table></figure>
+<p>在浏览器中运行上面的例子，我们会发现页面的背景色并没有如预期的一样首先变为红色，经过约 1 秒后再变为绿色。而是一直保持不变，经过约 1 秒后直接变为绿色。产生这样的结果的原因在于，两次修改页面背景色的操作是发生在同一次任务执行过程中的，这两次修改之间并没有触发更新渲染过程。而当程序执行结束后，更新渲染过程触发，GUI 渲染线程将页面背景色渲染成最后设置的背景色，即绿色。</p>
+<p>修改上面的例子：</p>
+<figure class="highlight javascript hljs"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="hljs-built_in">document</span>.body.style[<span class="hljs-string">'background-color'</span>] = <span class="hljs-string">'red'</span></span><br><span class="line"></span><br><span class="line">setTimeout(<span class="hljs-function"><span class="hljs-params">()</span> =&gt;</span> &#123;</span><br><span class="line">  <span class="hljs-built_in">document</span>.body.style[<span class="hljs-string">'background-color'</span>] = <span class="hljs-string">'green'</span></span><br><span class="line">&#125;, <span class="hljs-number">2000</span>)</span><br></pre></td></tr></table></figure>
+<p>这个例子中，背景色会先变为红色，经过约 2 秒后再变为绿色。这个例子与之前的例子的不同之处在于，没有通过阻塞的方式进行计时。将背景色设为红色以后，设置了 2 秒的定时器来再次更改背景色。此时调用栈已空，由于没有微任务，触发了更新渲染过程，页面背景色被渲染成绿色。</p>
+<p>再举个例子：</p>
+<figure class="highlight javascript hljs"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="hljs-built_in">document</span>.body.style[<span class="hljs-string">'background-color'</span>] = <span class="hljs-string">'red'</span></span><br><span class="line"></span><br><span class="line">setTimeout(<span class="hljs-function"><span class="hljs-params">()</span> =&gt;</span> &#123;</span><br><span class="line">  <span class="hljs-keyword">let</span> startTime = <span class="hljs-keyword">new</span> <span class="hljs-built_in">Date</span>().getTime()</span><br><span class="line">  <span class="hljs-keyword">while</span> (<span class="hljs-keyword">new</span> <span class="hljs-built_in">Date</span>().getTime() - startTime &lt;= <span class="hljs-number">1000</span>) &#123;&#125;</span><br><span class="line"></span><br><span class="line">  <span class="hljs-built_in">document</span>.body.style[<span class="hljs-string">'background-color'</span>] = <span class="hljs-string">'yellow'</span></span><br><span class="line">&#125;, <span class="hljs-number">100</span>)</span><br><span class="line"></span><br><span class="line"><span class="hljs-built_in">Promise</span>.resolve().then(<span class="hljs-function"><span class="hljs-params">()</span> =&gt;</span> &#123;</span><br><span class="line">  <span class="hljs-keyword">let</span> startTime = <span class="hljs-keyword">new</span> <span class="hljs-built_in">Date</span>().getTime()</span><br><span class="line">  <span class="hljs-keyword">while</span> (<span class="hljs-keyword">new</span> <span class="hljs-built_in">Date</span>().getTime() - startTime &lt;= <span class="hljs-number">1000</span>) &#123;&#125;</span><br><span class="line"></span><br><span class="line">  <span class="hljs-built_in">document</span>.body.style[<span class="hljs-string">'background-color'</span>] = <span class="hljs-string">'blue'</span></span><br><span class="line">&#125;).then(<span class="hljs-function"><span class="hljs-params">()</span> =&gt;</span> &#123;</span><br><span class="line">  <span class="hljs-keyword">let</span> startTime = <span class="hljs-keyword">new</span> <span class="hljs-built_in">Date</span>().getTime()</span><br><span class="line">  <span class="hljs-keyword">while</span> (<span class="hljs-keyword">new</span> <span class="hljs-built_in">Date</span>().getTime() - startTime &lt;= <span class="hljs-number">1000</span>) &#123;&#125;</span><br><span class="line"></span><br><span class="line">  <span class="hljs-built_in">document</span>.body.style[<span class="hljs-string">'background-color'</span>] = <span class="hljs-string">'green'</span></span><br><span class="line">&#125;)</span><br><span class="line"></span><br><span class="line"><span class="hljs-keyword">let</span> startTime = <span class="hljs-keyword">new</span> <span class="hljs-built_in">Date</span>().getTime()</span><br><span class="line"><span class="hljs-keyword">while</span> (<span class="hljs-keyword">new</span> <span class="hljs-built_in">Date</span>().getTime() - startTime &lt;= <span class="hljs-number">1000</span>) &#123;&#125;</span><br><span class="line"></span><br><span class="line"><span class="hljs-built_in">document</span>.body.style[<span class="hljs-string">'background-color'</span>] = <span class="hljs-string">'purple'</span></span><br></pre></td></tr></table></figure>
+<p>这个例子与上一节中的例子相似，只不过将控制台输出替换成了更改页面背景颜色。并在每次更改前阻塞主线程约 1 秒，避免变化太快，肉眼捕捉不到。在浏览器中运行上面的例子，可以看到页面背景颜色在大约 3 秒以后直接变为绿色，经过约 1 秒后在变为黄色。这是因为，在第二个微任务中将背景色设置为绿色之前微任务队列不为空，并没有触发更新渲染过程。第二个微任务结束后微任务队列为空，页面背景色被渲染成绿色。而后在下一次宏任务中背景色被设置为黄色，再次触发更新渲染过程，页面背景色被渲染成黄色。</p>
+<h3 id="web-worker"><a class="markdownIt-Anchor" href="#web-worker"></a> Web Worker</h3>
+<p>由于 JavaScript 单线程的机制，当调用栈中执行的代码需要消耗较长的时间时，任务队列中的任务就必须等待，直到这些较为耗时的操作执行完毕后才能被处理；并且，GUI 渲染也会被阻塞，GUI 会长时间得不到更新。</p>
+<p>为了解决上面提出的问题，浏览器提供了 Web Worker API，可以将较为耗时的操作分配到其他线程中。当创建一个 Worker 实例时，JavaScript 引擎就会向浏览器申请一个子线程，我们将其称为 Web Worker 线程。一个 Web Worker 实例具有单独的事件循环（worker event loop），该事件循环没有与之相关联的浏览环境，主线程与 Web Worker 线程之间通过 <code>postMessage()</code> 向对方推送消息。</p>
+<p><a href="https://raw.githubusercontent.com/Rickkkkkky/blog-gallery/master/worker-event-loop.png" target="_blank" rel="noopener"><img src="https://raw.githubusercontent.com/Rickkkkkky/blog-gallery/master/worker-event-loop.png" alt="worker-event-loop"></a></p>
+<p>Web Worker 具有较高的启动性能消耗，并且每个实例都会产生较高的内存消耗，不适合大量使用。</p>
 <hr>
 <blockquote>
-<h4 id="参考内容"><a class="markdownIt-Anchor" href="#参考内容"></a> 参考内容</h4>
+<h6 id="扩展阅读"><a class="markdownIt-Anchor" href="#扩展阅读"></a> 扩展阅读</h6>
 <ol>
+<li><a href="https://rickkky.github.io/posts/19e77f81319589c2.html" target="_blank" rel="noopener">理解 JavaScript 中的 Promise</a></li>
 <li><a href="https://jakearchibald.com/2015/tasks-microtasks-queues-and-schedules/" target="_blank" rel="noopener">Tasks, microtasks, queues and schedules</a></li>
-<li><a href="https://blog.carbonfive.com/2013/10/27/the-javascript-event-loop-explained/" target="_blank" rel="noopener">The JavaScript Event Loop: Explained</a></li>
+</ol>
+</blockquote>
+<hr>
+<blockquote>
+<h6 id="参考内容"><a class="markdownIt-Anchor" href="#参考内容"></a> 参考内容</h6>
+<ol>
+<li><a href="https://html.spec.whatwg.org/" target="_blank" rel="noopener">HTML Standard</a></li>
+<li><a href="https://tc39.es/ecma262/" target="_blank" rel="noopener">Standard ECMA-262</a></li>
 </ol>
 </blockquote>
 
@@ -334,22 +357,22 @@
                                 </span>
                                 <span class="level-end">
                                     <span class="level-item tag">
-                                        2
+                                        1
                                     </span>
                                 </span>
                             </a>
                         </li>
                     
                         <li>
-                            <a class="level is-marginless" href="/archives/2019/06">
+                            <a class="level is-marginless" href="/archives/2019/07">
                                 <span class="level-start">
                                     <span class="level-item">
-                                        六月 - 2019
+                                        七月 - 2019
                                     </span>
                                 </span>
                                 <span class="level-end">
                                     <span class="level-item tag">
-                                        1
+                                        2
                                     </span>
                                 </span>
                             </a>
@@ -388,8 +411,8 @@
        
         <div class="media-content">
             <div class="content">
-                <time class="has-text-light is-size-7 is-block" datetime="2019-06-20T08:00:00.000Z">2019-06-20</time>
-                <a class="is-link-strong is-size-6 is-single-line" href="/posts/977c1ee025c5154f.html">理解 JavaScript 中的 Promise</a>
+                <time class="has-text-light is-size-7 is-block" datetime="2019-07-25T08:00:00.000Z">2019-07-25</time>
+                <a class="is-link-strong is-size-6 is-single-line" href="/posts/99bdc41f3fe568a2.html">浅析浏览器中的事件循环</a>
                 <div class="level article-meta is-mobile">
                     <div class="level-left">
                         
@@ -407,8 +430,8 @@
        
         <div class="media-content">
             <div class="content">
-                <time class="has-text-light is-size-7 is-block" datetime="2019-04-19T08:00:00.000Z">2019-04-19</time>
-                <a class="is-link-strong is-size-6 is-single-line" href="/posts/99bdc41f3fe568a2.html">理解 JavaScript 中的事件循环</a>
+                <time class="has-text-light is-size-7 is-block" datetime="2019-07-22T08:00:00.000Z">2019-07-22</time>
+                <a class="is-link-strong is-size-6 is-single-line" href="/posts/19e77f81319589c2.html">理解 JavaScript 中的 Promise</a>
                 <div class="level article-meta is-mobile">
                     <div class="level-left">
                         
@@ -496,17 +519,6 @@
 
     
         <li>
-            <a class="level is-marginless" href="/tags/Interviews/">
-                <span class="level-start">
-                    <span class="level-item">Interviews</span>
-                </span>
-                <span class="level-end">
-                    <span class="level-item tag">0</span>
-                </span>
-            </a>
-        </li>
-    
-        <li>
             <a class="level is-marginless" href="/tags/JavaScript/">
                 <span class="level-start">
                     <span class="level-item">JavaScript</span>
@@ -524,28 +536,6 @@
                 </span>
                 <span class="level-end">
                     <span class="level-item tag">1</span>
-                </span>
-            </a>
-        </li>
-    
-        <li>
-            <a class="level is-marginless" href="/tags/WebGL/">
-                <span class="level-start">
-                    <span class="level-item">WebGL</span>
-                </span>
-                <span class="level-end">
-                    <span class="level-item tag">0</span>
-                </span>
-            </a>
-        </li>
-    
-        <li>
-            <a class="level is-marginless" href="/tags/React/">
-                <span class="level-start">
-                    <span class="level-item">React</span>
-                </span>
-                <span class="level-end">
-                    <span class="level-item tag">0</span>
                 </span>
             </a>
         </li>
@@ -610,7 +600,7 @@
             <div class="level-start has-text-centered-mobile">
                 <a class="footer-logo is-block" href="/">
                     
-                        <img src="/images/I-Know-JS.png" alt="理解 JavaScript 中的事件循环" height="28">
+                        <img src="/images/I-Know-JS.png" alt="浅析浏览器中的事件循环" height="28">
                     
                 </a>
                 <p class="is-size-7">&copy; 2019 Ricky&#39;s Blog Powered by <a href="http://hexo.io/" target="_blank">Hexo</a> & <a href="https://github.com/Rickkkkkky/hexo-theme-coriander">Coriander</a></p>
